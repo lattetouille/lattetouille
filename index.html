@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>우리의 보금자리</title>
-<meta name="description" content="매매·전세·월세를 같은 조건으로 놓고 비교하는 주택 자금계산기.">
+<meta name="description" content="매매·전세·월세를 같은 조건으로 놓고 비교하는 주택 자금계산기">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -190,6 +190,7 @@ button{font-family:inherit}
 .masthead{padding:var(--x5) 0 var(--x1)}
 .mast-top{display:flex;align-items:center;justify-content:space-between;gap:var(--x3)}
 .masthead h1{font-size:var(--t7);line-height:var(--lh7)}
+.h1-emoji{font-size:.9em;line-height:1}
 @media(min-width:480px){.masthead h1{font-size:var(--t8);line-height:var(--lh8)}}
 .sync{
   display:inline-flex;align-items:center;gap:var(--x1_5);margin-top:var(--x2);
@@ -203,14 +204,24 @@ button{font-family:inherit}
 @media(min-width:600px){.summary{grid-template-columns:repeat(3,1fr)}}
 .sum{
   appearance:none;text-align:left;width:100%;font:inherit;color:inherit;cursor:pointer;
+  position:relative;overflow:hidden;
   background:var(--bg-default);border:none;border-radius:var(--r3);
   padding:var(--x3) var(--x3_5);display:grid;gap:var(--x1_5);align-content:start;
   box-shadow:inset 0 0 0 1px var(--stroke-neutral-subtle);
   transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
 }
 .sum:active{background:var(--bg-default-pressed);scale:var(--pressed)}
+.sum[data-active="1"]{box-shadow:inset 0 0 0 1.5px var(--track)}
 .sum-top{display:flex;align-items:center;gap:var(--x1_5)}
-.sum-big,.bar{display:block}
+.sum-big{display:block}
+/* 그래프 대신 — 갈래를 알려주는 옅은 도장 */
+.sum-mark{
+  position:absolute;right:-10px;bottom:-14px;width:96px;height:96px;
+  color:var(--track);opacity:.09;pointer-events:none;
+  transform:rotate(-8deg);
+}
+:root[data-theme="dark"] .sum-mark{opacity:.16}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sum-mark{opacity:.16}}
 .sum-name{
   font-size:var(--t3);line-height:var(--lh3);font-weight:var(--w-bold);
   color:var(--track);
@@ -219,9 +230,9 @@ button{font-family:inherit}
 }
 .sum-sub{font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle);
   margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sum-big{font-size:var(--t7);line-height:var(--lh7);font-weight:var(--w-bold);white-space:nowrap}
-.bar{height:3px;background:var(--bg-neutral-weak);border-radius:var(--r-full);overflow:hidden}
-.bar i{display:block;height:100%;background:var(--track);border-radius:var(--r-full)}
+.sum-big{font-size:var(--t7);line-height:var(--lh7);font-weight:var(--w-bold);
+  white-space:nowrap;color:var(--track)}
+
 .sum-foot{display:flex;justify-content:space-between;align-items:baseline;gap:var(--x2);
   font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle)}
 .sum-foot>span:first-child{flex:none}
@@ -287,8 +298,6 @@ button{font-family:inherit}
 }
 
 /* ============================================================ amount */
-.amount-head{display:flex;align-items:center;justify-content:space-between;gap:var(--x3)}
-.amount-head .inputline{flex:none;width:136px;min-height:var(--x9)}
 .amount-in{
   width:100%;min-width:0;background:none;border:0;outline:none;text-align:right;
   color:var(--fg-neutral);font-weight:var(--w-bold);font-size:var(--t5);line-height:var(--lh5);
@@ -297,13 +306,7 @@ button{font-family:inherit}
   -moz-appearance:textfield;
 }
 .amount-in::-webkit-outer-spin-button,.amount-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.amount-head .unit{padding:0 var(--x3) 0 var(--x1)}
 .inputline .amount-in{font-size:var(--t5);line-height:var(--lh5)}
-input[type=range]{
-  width:100%;accent-color:var(--bg-brand-solid);margin:var(--x1) 0 0;min-height:var(--x6);
-}
-.ticks{display:flex;justify-content:space-between;
-  font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle);white-space:nowrap}
 
 /* ============================================================ tabs */
 .tabs{
@@ -329,17 +332,18 @@ input[type=range]{
 /* ============================================================ table */
 .tablewrap{
   overflow-x:auto;-webkit-overflow-scrolling:touch;
-  margin:0 calc(var(--x5) * -1);padding:0 var(--x5);
+  margin:0 calc(var(--x4) * -1);padding:0;
 }
-@media(max-width:479px){.tablewrap{margin:0 calc(var(--x4) * -1);padding:0 var(--x4)}}
 table{border-collapse:collapse;width:100%;min-width:480px;font-size:var(--t4);line-height:var(--lh4)}
 th,td{padding:var(--x1_5) var(--x2_5);text-align:right;white-space:nowrap;vertical-align:baseline;
   border-bottom:1px solid var(--stroke-neutral-subtle)}
 th:first-child,td:first-child{
-  text-align:left;position:sticky;left:0;background:var(--bg-default);
+  text-align:left;position:sticky;left:0;z-index:1;background:var(--bg-default);
   font-weight:var(--w-regular);color:var(--fg-neutral-subtle);
-  white-space:nowrap;padding-right:var(--x4);
+  white-space:nowrap;padding-left:var(--x4);padding-right:var(--x4);
+  box-shadow:1px 0 0 var(--stroke-neutral-subtle);
 }
+tr>*:last-child{padding-right:var(--x4)}
 thead th{
   font-size:var(--t4);line-height:var(--lh4);font-weight:var(--w-bold);color:var(--fg-neutral);
   white-space:nowrap;vertical-align:bottom;padding-bottom:var(--x2_5);
@@ -451,15 +455,11 @@ summary:active{background:var(--bg-default-pressed)}
 .param-grid input{font-size:var(--t4);line-height:var(--lh4);padding-left:var(--x3)}
 .param-grid .unit{font-size:var(--t3);padding:0 var(--x3) 0 var(--x1)}
 
-.foot-box{margin-top:var(--x3);background:transparent;box-shadow:none;border-radius:var(--r2_5)}
-.foot-box>summary{
-  padding:var(--x2_5) var(--x1);font-size:var(--t3);line-height:var(--lh3);
-  font-weight:var(--w-medium);color:var(--fg-neutral-subtle);
+.foot{
+  margin:var(--x5) 0 0;padding:0 var(--x1);
+  font-size:var(--t1);line-height:var(--lh2);color:var(--fg-neutral-subtle);
 }
-.foot-box>summary::after{content:"펼치기";font-size:var(--t3)}
-.foot-box[open]>summary::after{content:"접기"}
-.foot{margin:0;padding:0 var(--x1) var(--x3);font-size:var(--t3);line-height:var(--lh4);
-  color:var(--fg-neutral-subtle)}
+.foot b{font-weight:var(--w-bold);color:var(--fg-neutral-subtle)}
 .foot b{font-weight:var(--w-bold);color:var(--fg-neutral-muted)}
 
 /* ============================================================ 매물 */
@@ -473,6 +473,8 @@ summary:active{background:var(--bg-default-pressed)}
 .cmp-title{font-size:var(--t3);line-height:var(--lh3);font-weight:var(--w-bold);color:var(--fg-neutral)}
 .cmp-n{font-size:var(--t2);line-height:var(--lh2);color:var(--fg-neutral-subtle)}
 .cmp .tablewrap{margin:0;padding:0}
+.cmp-table th:first-child,.cmp-table td:first-child{padding-left:var(--x3)}
+.cmp-table tr>*:last-child{padding-right:var(--x3)}
 .cmp-table{min-width:700px;background:var(--bg-default);border-radius:var(--r2);overflow:hidden}
 .cmp-table th:first-child,.cmp-table td:first-child{
   background:var(--bg-default);color:var(--fg-neutral);font-weight:var(--w-bold);
@@ -504,26 +506,49 @@ summary:active{background:var(--bg-default-pressed)}
 .prop-empty b{color:var(--fg-neutral)}
 
 .prop{border-radius:var(--r3);background:var(--bg-fill);overflow:hidden;display:grid}
-.prop-head{padding:var(--x4) var(--x4) var(--x3);display:grid;gap:var(--x2_5)}
-.prop-name{
-  width:100%;padding:var(--x1) 0;background:none;border:0;outline:none;
-  border-bottom:1px solid transparent;color:var(--fg-neutral);
-  font-weight:var(--w-bold);font-size:var(--t5);line-height:var(--lh5);
+
+.prop-brief{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--x3);
+  padding:var(--x3) var(--x3_5);cursor:pointer;text-align:left;
+  background:var(--bg-fill);border:0;border-radius:var(--r3);font-family:inherit;
+  transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
 }
-.prop-name:focus{border-bottom-color:var(--stroke-neutral-contrast)}
-.prop-name::placeholder{color:var(--fg-placeholder);font-weight:var(--w-bold)}
+.prop-brief:active{background:var(--bg-neutral-weak-pressed);scale:var(--pressed)}
+.prop-brief.is-new{animation:cardIn .3s var(--ease) both}
+.pr-main{display:grid;gap:2px;min-width:0}
+.pr-name{
+  font-size:var(--t4);line-height:var(--lh4);font-weight:var(--w-bold);color:var(--fg-neutral);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.pr-meta{
+  font-size:var(--t2);line-height:var(--lh2);color:var(--fg-neutral-subtle);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.pr-side{display:flex;align-items:center;gap:var(--x2);flex:none}
+.pr-chk{font-size:var(--t2);line-height:var(--lh2);color:var(--fg-neutral-subtle);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.prop-head{padding:var(--x4) var(--x4) var(--x3);display:grid;gap:var(--x2)}
+.prop-names{display:grid;grid-template-columns:1.6fr 1fr;gap:var(--x2)}
+.prop-name,.prop-unit,.prop-area{
+  width:100%;min-height:var(--x10);padding:var(--x2) var(--x3);
+  background:var(--bg-default);color:var(--fg-neutral);border:0;outline:none;
+  border-radius:var(--r2);box-shadow:inset 0 0 0 1px var(--stroke-neutral-weak);
+  font-family:inherit;font-size:var(--t4);line-height:var(--lh4);
+  transition:box-shadow var(--d-color) var(--ease);
+}
+.prop-name{font-weight:var(--w-bold);font-size:var(--t5);line-height:var(--lh5)}
+.prop-name:focus,.prop-unit:focus,.prop-area:focus{
+  box-shadow:inset 0 0 0 2px var(--stroke-neutral-contrast);
+}
+.prop-name::placeholder,.prop-unit::placeholder{color:var(--fg-placeholder)}
 .prop-area{
-  width:100%;padding:var(--x1) var(--x2);background:var(--bg-default);
-  color:var(--fg-neutral-subtle);border:0;outline:none;border-radius:var(--r-xs);
-  box-shadow:inset 0 0 0 1px var(--stroke-neutral-muted);
-  font-family:inherit;font-size:var(--t3);line-height:var(--lh4);
-  appearance:none;-webkit-appearance:none;min-height:30px;
+  color:var(--fg-neutral-subtle);
+  appearance:none;-webkit-appearance:none;padding-right:var(--x8);
   background-image:linear-gradient(45deg,transparent 50%,var(--fg-neutral-subtle) 50%),
                    linear-gradient(135deg,var(--fg-neutral-subtle) 50%,transparent 50%);
-  background-position:calc(100% - 14px) 13px,calc(100% - 9px) 13px;
-  background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:var(--x6);
+  background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;
 }
-.prop-area:focus{box-shadow:inset 0 0 0 2px var(--stroke-neutral-contrast)}
 .prop-row{display:flex;gap:var(--x2);align-items:center;flex-wrap:wrap}
 .prop-type{display:flex;gap:var(--x1_5)}
 .prop-type button{
@@ -538,18 +563,29 @@ summary:active{background:var(--bg-default-pressed)}
   background:var(--bg-neutral-solid-muted);color:var(--seed-static-white);
   box-shadow:none;font-weight:var(--w-bold);
 }
+.prop-actions{
+  display:flex;align-items:center;gap:var(--x2);
+  padding-top:var(--x3);border-top:1px solid var(--stroke-neutral-subtle);
+}
+.prop-fold{
+  min-height:var(--x10);padding:0 var(--x3_5);cursor:pointer;
+  background:transparent;border:0;border-radius:var(--r2);
+  color:var(--fg-neutral-subtle);font-family:inherit;font-weight:var(--w-medium);
+  font-size:var(--t4);line-height:1;
+}
+.prop-fold:active{background:var(--bg-neutral-weak-pressed)}
 .prop-save{
-  margin-left:auto;min-height:var(--x8);padding:0 var(--x3);cursor:pointer;
+  margin-left:auto;min-height:var(--x10);padding:0 var(--x5);cursor:pointer;
   background:var(--bg-neutral-weak);color:var(--fg-neutral-subtle);border:0;
-  border-radius:var(--r-full);font-family:inherit;font-weight:var(--w-bold);
-  font-size:var(--t3);line-height:1;
+  border-radius:var(--r2);font-family:inherit;font-weight:var(--w-bold);
+  font-size:var(--t4);line-height:1;
   transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
 }
 .prop-save.is-dirty{background:var(--bg-brand-solid);color:var(--seed-static-white)}
 .prop-save:disabled{cursor:default;opacity:.7}
 .prop-save:not(:disabled):active{scale:var(--pressed)}
 .prop-del{
-  min-height:var(--x8);padding:0 var(--x2_5);cursor:pointer;
+  min-height:var(--x10);padding:0 var(--x3_5);cursor:pointer;
   background:transparent;border:0;border-radius:var(--r2);
   color:var(--fg-neutral-subtle);font-weight:var(--w-medium);font-size:var(--t4);line-height:1;
 }
@@ -591,13 +627,8 @@ summary:active{background:var(--bg-default-pressed)}
 .vd-notes .vd-kill{color:var(--fg-critical)}
 .vd-notes .vd-kill b{color:var(--fg-critical)}
 
-.score{display:grid;gap:var(--x1)}
-.score-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--x2)}
-.score-head label{font-size:var(--t4);line-height:var(--lh4);font-weight:var(--w-bold);color:var(--fg-neutral)}
-.score-v{font-size:var(--t7);line-height:var(--lh7);font-weight:var(--w-bold);
-  color:var(--fg-brand);font-variant-numeric:tabular-nums;white-space:nowrap}
-.score-v em{font-style:normal;font-size:var(--t3);font-weight:var(--w-medium);
-  color:var(--fg-neutral-subtle);margin-left:2px}
+.score .inputline{max-width:180px}
+.score input{font-weight:var(--w-bold);color:var(--fg-brand)}
 
 .chk-group{
   margin:0;background:var(--bg-fill);border-radius:var(--r2_5);box-shadow:none;
@@ -668,6 +699,40 @@ summary:active{background:var(--bg-default-pressed)}
 }
 .lightbox-bar button:active{scale:var(--pressed)}
 
+/* ============ 동작 피드백 ============ */
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(-10px) scale(.985)}
+  to{opacity:1;transform:none}
+}
+.prop.is-new{animation:cardIn .3s var(--ease) both}
+.prop.is-leaving{
+  opacity:0;transform:scale(.98);
+  transition:opacity .2s var(--ease),transform .2s var(--ease);
+}
+
+@keyframes chipPop{
+  0%{transform:scale(1)} 45%{transform:scale(1.13)} 100%{transform:scale(1)}
+}
+.chip.pop{animation:chipPop .22s var(--ease)}
+
+@keyframes savedPop{
+  0%{transform:scale(1)} 40%{transform:scale(1.1)} 100%{transform:scale(1)}
+}
+.prop-save.saved{
+  background:var(--bg-positive-solid);color:var(--seed-static-white);opacity:1;
+  animation:savedPop .3s var(--ease);
+}
+
+@keyframes shotPulse{0%,100%{opacity:1} 50%{opacity:.45}}
+.shot-add.busy{animation:shotPulse .9s ease-in-out infinite}
+
+@keyframes btnSpin{to{transform:rotate(360deg)}}
+.btn-primary .spin{
+  display:inline-block;width:12px;height:12px;margin-right:var(--x1_5);
+  border:2px solid currentColor;border-right-color:transparent;border-radius:var(--r-full);
+  animation:btnSpin .7s linear infinite;vertical-align:-1px;
+}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scale:none!important}}
 </style>
 </head>
@@ -677,7 +742,7 @@ summary:active{background:var(--bg-default-pressed)}
 
 <header class="masthead">
   <div class="mast-top">
-    <h1>우리의 보금자리</h1>
+    <h1>우리의 보금자리 <span class="h1-emoji" aria-hidden="true">🏡</span></h1>
     <button type="button" id="shareBtn" class="btn-utility">링크 복사</button>
   </div>
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">불러오는 중</span></span>
@@ -702,7 +767,7 @@ summary:active{background:var(--bg-default-pressed)}
     <div class="field">
       <label for="gift">양가 지원금</label>
       <div class="inputline"><input id="gift" type="number" inputmode="numeric" step="500"><span class="unit">만원</span></div>
-      <span class="hint">소득은 세전 기준. 증여는 혼인신고 전후 2년 이내면 1인 1.5억까지 비과세.</span>
+      <span class="hint">소득은 세전 기준. 증여는 혼인신고 전후 2년 이내면 1인 1.5억까지 비과세</span>
     </div>
     <div class="field">
       <label>신청 명의</label>
@@ -743,20 +808,18 @@ summary:active{background:var(--bg-default-pressed)}
 <details id="paramsBox">
   <summary>가정값 · 금리와 한도</summary>
   <div class="det-body">
-    <p class="hint" style="margin:0">정책이 바뀌면 여기만 고칩니다. 금액은 만원, 금리는 % 단위. 신청 직전에 주택도시기금 1566-9009, 주택금융공사 1688-8114로 확인하세요.</p>
+    <p class="hint" style="margin:0">정책이 바뀌면 여기만 고칩니다. 금액은 만원, 금리는 % 단위. 신청 직전에 주택도시기금 1566-9009, 주택금융공사 1688-8114로 확인하세요</p>
     <div class="param-grid" id="paramGrid"></div>
     <button type="button" id="resetParams" class="btn-utility">기본값으로 되돌리기</button>
   </div>
 </details>
 
-<details class="foot-box"><summary>계산 기준과 주의</summary>
 <p class="foot">
-  <b>추정치입니다.</b> 실제 승인액은 감정가·신용·심사에 따라 달라집니다. 사전 한도 조회 결과를 서면으로 받아 이 숫자와 대조하세요.<br>
-  <b>2026.08.13 대책의 결혼페널티 해소 기준으로 계산합니다.</b> 부부 중 낮은 쪽 소득으로 심사 — 보금자리론 7,000만원 / 디딤돌 6,000만원 / 버팀목 5,000만원.
-  보금자리론만 2026년 10월 시행이 확정됐고 디딤돌·버팀목은 하반기 예정입니다. 계약 시점이 시행 전이면 단독 명의를 대비책으로 두세요.<br>
-  취득세 1.0%(6억 이하) · 생애최초 감면 200만원 한도 · 전용 85㎡ 이하 농특세 비과세 · 수도권 규제지역 만기 30년 기준.
+  <b>추정치입니다</b> 실제 승인액은 감정가·신용·심사에 따라 달라집니다. 사전 한도 조회 결과를 서면으로 받아 이 숫자와 대조하세요<br>
+  <b>2026.08.13 대책의 결혼페널티 해소 기준으로 계산합니다</b> 부부 중 낮은 쪽 소득으로 심사 — 보금자리론 7,000만원 / 디딤돌 6,000만원 / 버팀목 5,000만원
+  보금자리론만 2026년 10월 시행이 확정됐고 디딤돌·버팀목은 하반기 예정입니다. 계약 시점이 시행 전이면 단독 명의를 대비책으로 두세요<br>
+  취득세 1.0%(6억 이하) · 생애최초 감면 200만원 한도 · 전용 85㎡ 이하 농특세 비과세 · 수도권 규제지역 만기 30년 기준
 </p>
-</details>
 
 </div>
 
@@ -841,7 +904,7 @@ function won(n){
 const wonK = n => won(Math.round(n / 1000) * 1000);
 const pct = n => (n * 100).toFixed(1) + "%";
 
-/* 재산세 — 공시가격 × 공정시장가액비율에 누진세율, 도시지역분·지방교육세 포함.
+/* 재산세 — 공시가격 × 공정시장가액비율에 누진세율, 도시지역분·지방교육세 포함
    공시 9억 이하 1세대 1주택이면 특례세율을 적용한다. */
 function propertyTax(gongsi){
   const base = gongsi * (P("fairRatio") / 100);
@@ -1003,6 +1066,12 @@ function calcWolse(){
 }
 
 /* ============ 요약 ============ */
+const ICONS = {
+  buy: '<path d="M2.5 10.2 12 2.6l9.5 7.6V20a1.4 1.4 0 0 1-1.4 1.4h-4.7v-6.2H8.6v6.2H3.9A1.4 1.4 0 0 1 2.5 20z"/>',
+  jeonse: '<path d="M15.5 2a6.5 6.5 0 0 0-6.2 8.5l-7 7V22h4.4v-2.3h2.3v-2.3h2.3l1.4-1.4A6.5 6.5 0 1 0 15.5 2zm1.8 5.6a1.7 1.7 0 1 1-2.4-2.4 1.7 1.7 0 0 1 2.4 2.4z"/>',
+  wolse: '<path d="M7 2v2.2H4.6A1.6 1.6 0 0 0 3 5.8v14.6A1.6 1.6 0 0 0 4.6 22h14.8a1.6 1.6 0 0 0 1.6-1.6V5.8a1.6 1.6 0 0 0-1.6-1.6H17V2h-2.2v2.2H9.2V2zm12 8v10.2H5V10z"/>'
+};
+
 function renderSummary(b, j, w){
   const items = [
     { name:"매매", tab:"buy",    sub:b.best.name, r:b.best,
@@ -1012,35 +1081,30 @@ function renderSummary(b, j, w){
     { name:"월세", tab:"wolse",  sub:w.best.name, r:w.best,
       color:"var(--fg-brand)",       weak:"var(--bg-brand-weak)" }
   ];
-  const max = Math.max(...items.map(i => i.r.netMonthly), 1);
   document.getElementById("summary").innerHTML = items.map(i => `
     <button class="sum" type="button" data-go="${i.tab}"
+            ${S.tab === i.tab ? 'data-active="1"' : ""}
             style="--track:${i.color};--track-weak:${i.weak}">
+      <svg class="sum-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ICONS[i.tab]}</svg>
       <span class="sum-top">
         <span class="sum-name">${i.name}</span>
         <span class="sum-sub">${i.sub}</span>
       </span>
       <span class="sum-big n">${wonK(i.r.netMonthly)}</span>
-      <span class="bar"><i style="width:${(i.r.netMonthly/max*100).toFixed(1)}%"></i></span>
       <span class="sum-foot"><span>계약 시 현금</span><b class="n">${won(i.r.cashNeed)}</b></span>
       <span class="sum-foot"><span>2년 거주비용</span><b class="n">${won(i.r.cost2y)}</b></span>
     </button>`).join("");
 }
 
 /* ============ 금액 입력 + 슬라이더 ============ */
-function amountBlock(id, label, val, min, max, step, ticks){
+function amountBlock(id, label, val, step){
   return `<div class="field">
-    <div class="amount-head">
-      <label for="${id}_n">${label}</label>
-      <div class="inputline">
-        <input id="${id}_n" class="amount-in" type="number" inputmode="numeric"
-               step="${step}" min="0" value="${val}">
-        <span class="unit">만원</span>
-      </div>
+    <label for="${id}_n">${label}</label>
+    <div class="inputline">
+      <input id="${id}_n" class="amount-in" type="number" inputmode="numeric"
+             step="${step}" min="0" value="${val}">
+      <span class="unit">만원</span>
     </div>
-    <input id="${id}" type="range" min="${min}" max="${Math.max(max, val)}" step="${step}" value="${val}"
-           aria-label="${label} 슬라이더">
-    <div class="ticks">${ticks.map(t => `<span>${t}</span>`).join("")}</div>
   </div>`;
 }
 function pickCard(name, why, metrics){
@@ -1066,13 +1130,15 @@ function renderBuy(){
   const row = (label, fn, cls) => `<tr class="${cls||""}">
     <th scope="row">${label}</th>${cols.map(r => `<td class="v">${fn(r)}</td>`).join("")}</tr>`;
   return `
-  ${amountBlock("buyPrice","매수가",S.buyPrice,30000,80000,100,["3억","4.5억","6억","8억"])}
-  ${amountBlock("buyFee","월 관리비",S.buyFee,0,60,1,["0","20만","40만","60만"])}
-  ${amountBlock("buyLtm","월 장기수선충당금",S.buyLtm,0,10,0.5,["0","3만","6만","10만"])}
+  ${amountBlock("buyPrice","매수가",S.buyPrice,100)}
+  <div class="grid2">
+    ${amountBlock("buyFee","월 관리비",S.buyFee,1)}
+    ${amountBlock("buyLtm","장기수선충당금",S.buyLtm,0.5)}
+  </div>
   ${pickCard(best.name,
     S.buyPrice*M > 4.5714e8
-      ? "매수가가 디딤돌 한도 4억 5,714만원을 넘어 초과분은 전액 현금입니다."
-      : "디딤돌 한도 안쪽 구간이라 금리가 낮은 쪽을 그대로 쓸 수 있습니다.",
+      ? "매수가가 디딤돌 한도 4억 5,714만원을 넘어 초과분은 전액 현금입니다"
+      : "디딤돌 한도 안쪽 구간이라 금리가 낮은 쪽을 그대로 쓸 수 있습니다",
     [["월 실부담", wonK(best.netMonthly)],
      ["계약 시 현금", won(best.cashNeed)],
      ["대출 실행액", best.loan ? won(best.loan) : "—"],
@@ -1099,13 +1165,13 @@ function renderBuy(){
     </tbody>
   </table></div>
   <details class="notes-box" id="notesBox"><summary>읽는 법</summary><ul class="notes">
-    <li>기준시가 추정 <b>${won(c.gongsi)}</b> — 6억 이하라 장기주택저당차입금 이자상환액 소득공제 ${c.deductible ? "<b>대상</b>입니다" : "<b>대상이 아닙니다</b>"}. 30년 고정·비거치라 정책대출은 연 2,000만원 한도를 받습니다.</li>
-    <li>디딤돌 상품한도는 매수가 <b>4억 5,714만원</b>을 넘는 순간 LTV보다 먼저 걸립니다. 그 위로 오르는 금액은 전액 현금입니다.</li>
-    <li>계약금 10%(<b>${won(c.price*0.1)}</b>)는 토지거래허가가 나기 전에 나갑니다. 대출과 무관하게 미리 있어야 하는 현금입니다.</li>
-    <li>마이너스통장은 한도 전액이 DSR에 잡힙니다. 은행 주담대를 쓸 계획이면 잔금 3개월 전까지 해지하세요.</li>
-    <li>재산세 연 <b>${won(c.propTax)}</b> — 공시가격 ${won(c.gongsi)} × 공정시장가액비율 ${P("fairRatio")}%에 누진세율을 매기고 도시지역분·지방교육세를 더한 값입니다. 공시 9억 이하 1세대 1주택 특례세율 기준. 6월 1일 소유자가 냅니다.</li>
-    <li>장기수선충당금은 <b>소유자 부담</b>입니다. 관리비 고지서에 이미 포함돼 나오는 단지가 많으니, 그런 경우 여기를 0으로 두고 관리비에만 넣으세요.</li>
-    <li><b>2년 거주비용</b>은 2년 동안 회수하지 못하는 돈입니다. 이자 + 부대비용 + 관리비 + 장기수선충당금 + 재산세에서 절세분을 뺐고, 원금 상환분은 자산으로 남으므로 넣지 않았습니다.</li>
+    <li>기준시가 추정 <b>${won(c.gongsi)}</b> — 6억 이하라 장기주택저당차입금 이자상환액 소득공제 ${c.deductible ? "<b>대상</b>입니다" : "<b>대상이 아닙니다</b>"}. 30년 고정·비거치라 정책대출은 연 2,000만원 한도를 받습니다</li>
+    <li>디딤돌 상품한도는 매수가 <b>4억 5,714만원</b>을 넘는 순간 LTV보다 먼저 걸립니다. 그 위로 오르는 금액은 전액 현금입니다</li>
+    <li>계약금 10%(<b>${won(c.price*0.1)}</b>)는 토지거래허가가 나기 전에 나갑니다. 대출과 무관하게 미리 있어야 하는 현금입니다</li>
+    <li>마이너스통장은 한도 전액이 DSR에 잡힙니다. 은행 주담대를 쓸 계획이면 잔금 3개월 전까지 해지하세요</li>
+    <li>재산세 연 <b>${won(c.propTax)}</b> — 공시가격 ${won(c.gongsi)} × 공정시장가액비율 ${P("fairRatio")}%에 누진세율을 매기고 도시지역분·지방교육세를 더한 값입니다. 공시 9억 이하 1세대 1주택 특례세율 기준. 6월 1일 소유자가 냅니다</li>
+    <li>장기수선충당금은 <b>소유자 부담</b>입니다. 관리비 고지서에 이미 포함돼 나오는 단지가 많으니, 그런 경우 여기를 0으로 두고 관리비에만 넣으세요</li>
+    <li><b>2년 거주비용</b>은 2년 동안 회수하지 못하는 돈입니다. 이자 + 부대비용 + 관리비 + 장기수선충당금 + 재산세에서 절세분을 뺐고, 원금 상환분은 자산으로 남으므로 넣지 않았습니다</li>
   </ul></details>`;
 }
 
@@ -1114,10 +1180,12 @@ function renderJeonse(){
   const row = (label, fn, cls) => `<tr class="${cls||""}">
     <th scope="row">${label}</th>${cols.map(r => `<td class="v">${fn(r)}</td>`).join("")}</tr>`;
   return `
-  ${amountBlock("jeonseDep","전세보증금",S.jeonseDep,5000,60000,500,["5천만","2억","4억","6억"])}
-  ${amountBlock("jeonseFee","월 관리비",S.jeonseFee,0,60,1,["0","20만","40만","60만"])}
+  <div class="grid2">
+    ${amountBlock("jeonseDep","전세보증금",S.jeonseDep,500)}
+    ${amountBlock("jeonseFee","월 관리비",S.jeonseFee,1)}
+  </div>
   ${pickCard(best.name,
-    "이 보증금에서 자격이 되는 상품 중 월 실부담이 가장 낮습니다.",
+    "이 보증금에서 자격이 되는 상품 중 월 실부담이 가장 낮습니다",
     [["월 실부담", wonK(best.netMonthly)],
      ["계약 시 현금", won(best.cashNeed)],
      ["대출 실행액", best.loan ? won(best.loan) : "—"],
@@ -1140,12 +1208,12 @@ function renderJeonse(){
     </tbody>
   </table></div>
   <details class="notes-box" id="notesBox"><summary>읽는 법</summary><ul class="notes">
-    <li>전세대출은 <b>원금을 갚지 않습니다.</b> 위 이자는 전액 소멸 비용이고, 매매의 월 상환액에는 원금이 섞여 있습니다. 같은 숫자로 비교하면 안 됩니다.</li>
-    <li>청년 버팀목 한도는 2025.06.27 계약분부터 2억에서 <b>1.5억</b>으로 줄었습니다. 보증금 3억이면 80%인 2.4억이 아니라 1.5억까지만 나옵니다.</li>
-    <li>신혼 버팀목은 <b>한 명이 5,000만원 이하</b>면 열립니다. 현행 부부합산 7,500만원 기준에서는 막히던 구간이고, 디딤돌·버팀목 시행일은 아직 고시되지 않았습니다.</li>
-    <li>전세가율(보증금 ÷ 같은 면적 매매 실거래)이 <b>80%</b>를 넘으면 재고하세요. 계약 전 등기부 을구의 채권최고액을 반드시 확인합니다.</li>
-    <li><b>2년 거주비용</b>은 2년 동안 회수하지 못하는 돈입니다. 이자 + 중개보수·반환보증료 + 관리비에서 절세분을 뺐고, 보증금은 돌려받으므로 넣지 않았습니다.</li>
-    <li>세입자는 재산세를 내지 않고, 관리비에 섞여 나간 장기수선충당금은 <b>퇴거할 때 집주인에게 돌려받습니다.</b> 이사 전에 관리사무소에서 납부확인서를 떼세요.</li>
+    <li>전세대출은 <b>원금을 갚지 않습니다</b> 위 이자는 전액 소멸 비용이고, 매매의 월 상환액에는 원금이 섞여 있습니다. 같은 숫자로 비교하면 안 됩니다</li>
+    <li>청년 버팀목 한도는 2025.06.27 계약분부터 2억에서 <b>1.5억</b>으로 줄었습니다. 보증금 3억이면 80%인 2.4억이 아니라 1.5억까지만 나옵니다</li>
+    <li>신혼 버팀목은 <b>한 명이 5,000만원 이하</b>면 열립니다. 현행 부부합산 7,500만원 기준에서는 막히던 구간이고, 디딤돌·버팀목 시행일은 아직 고시되지 않았습니다</li>
+    <li>전세가율(보증금 ÷ 같은 면적 매매 실거래)이 <b>80%</b>를 넘으면 재고하세요. 계약 전 등기부 을구의 채권최고액을 반드시 확인합니다</li>
+    <li><b>2년 거주비용</b>은 2년 동안 회수하지 못하는 돈입니다. 이자 + 중개보수·반환보증료 + 관리비에서 절세분을 뺐고, 보증금은 돌려받으므로 넣지 않았습니다</li>
+    <li>세입자는 재산세를 내지 않고, 관리비에 섞여 나간 장기수선충당금은 <b>퇴거할 때 집주인에게 돌려받습니다</b> 이사 전에 관리사무소에서 납부확인서를 떼세요</li>
   </ul></details>`;
 }
 
@@ -1155,11 +1223,13 @@ function renderWolse(){
     <th scope="row">${label}</th>${cols.map(r => `<td class="v">${fn(r)}</td>`).join("")}</tr>`;
   const equiv = c.dep + c.rent * (12 / (P("convRate")/100));
   return `
-  ${amountBlock("wolseDep","보증금",S.wolseDep,500,30000,100,["5백만","1억","2억","3억"])}
-  ${amountBlock("wolseRent","월 임대료",S.wolseRent,20,300,5,["20만","100만","200만","300만"])}
-  ${amountBlock("wolseFee","월 관리비",S.wolseFee,0,50,1,["0","15만","30만","50만"])}
+  <div class="grid2">
+    ${amountBlock("wolseDep","보증금",S.wolseDep,100)}
+    ${amountBlock("wolseRent","월 임대료",S.wolseRent,5)}
+  </div>
+  ${amountBlock("wolseFee","월 관리비",S.wolseFee,1)}
   ${pickCard(best.name,
-    `전월세전환율 ${P("convRate")}% 기준으로 환산하면 전세 ${won(equiv)}짜리 집입니다.`,
+    `전월세전환율 ${P("convRate")}% 기준으로 환산하면 전세 ${won(equiv)}짜리 집입니다`,
     [["월 실부담", wonK(best.netMonthly)],
      ["계약 시 현금", won(best.cashNeed)],
      ["보증금 대출", best.depLoan ? won(best.depLoan) : "—"],
@@ -1185,11 +1255,11 @@ function renderWolse(){
     </tbody>
   </table></div>
   <details class="notes-box" id="notesBox"><summary>읽는 법</summary><ul class="notes">
-    <li>월세 세액공제율 <b>${(c.taxRate*100).toFixed(0)}%</b> · 연 ${won(c.taxCredit)}. 총급여 5,500만원 이하 17%, 8,000만원 이하 15%, 초과하면 없습니다. 관리비는 대상이 아닙니다.</li>
-    <li>월세 대출은 매달 빌려 잔액이 늘어납니다. 위 이자는 <b>평균 잔액</b> 기준이고, 2년 뒤 원금은 한꺼번에 갚아야 합니다.</li>
-    <li><b>월 실부담</b>은 통장에서 실제로 나가는 돈이라 빌린 월세가 빠져 있습니다. <b>2년 거주비용</b>에는 그 월세도 넣었습니다 — 빌렸든 아니든 집주인에게 이미 나간 돈이기 때문입니다.</li>
-    <li>중개보수는 환산보증금(보증금 + 월세×100 = <b>${won(c.dep + c.rent*100)}</b>) 기준으로 매깁니다.</li>
-    <li>2026 세제개편안의 한도 1,200만원·청년 17% 일괄은 <b>아직 국회를 통과하지 않았습니다.</b> 위 계산은 현행 기준입니다.</li>
+    <li>월세 세액공제율 <b>${(c.taxRate*100).toFixed(0)}%</b> · 연 ${won(c.taxCredit)}. 총급여 5,500만원 이하 17%, 8,000만원 이하 15%, 초과하면 없습니다. 관리비는 대상이 아닙니다</li>
+    <li>월세 대출은 매달 빌려 잔액이 늘어납니다. 위 이자는 <b>평균 잔액</b> 기준이고, 2년 뒤 원금은 한꺼번에 갚아야 합니다</li>
+    <li><b>월 실부담</b>은 통장에서 실제로 나가는 돈이라 빌린 월세가 빠져 있습니다 <b>2년 거주비용</b>에는 그 월세도 넣었습니다 — 빌렸든 아니든 집주인에게 이미 나간 돈이기 때문입니다</li>
+    <li>중개보수는 환산보증금(보증금 + 월세×100 = <b>${won(c.dep + c.rent*100)}</b>) 기준으로 매깁니다</li>
+    <li>2026 세제개편안의 한도 1,200만원·청년 17% 일괄은 <b>아직 국회를 통과하지 않았습니다</b> 위 계산은 현행 기준입니다</li>
   </ul></details>`;
 }
 
@@ -1223,7 +1293,7 @@ const AREAS = {
            "광명","광주","군포","의왕","오산","이천","하남","남양주","의정부","파주","구리","안성","양주","포천","여주"],
   "인천": ["중구","동구","미추홀구","연수구","남동구","부평구","계양구","서구"]
 };
-let props = [], propsReady = false, pending = {};
+let props = [], propsReady = false, pending = {}, justAdded = {}, openProps = {};
 
 const chipMark = v => v === "y" ? " ○" : v === "m" ? " △" : v === "n" ? " ✕" : "";
 const MARKED = v => v === "y" || v === "m" || v === "n";
@@ -1247,7 +1317,7 @@ function tallyAll(p){
 }
 const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-/* ponytail: 계산 함수가 전역 S를 읽으므로 잠깐 값을 바꿔치기했다가 되돌린다.
+/* ponytail: 계산 함수가 전역 S를 읽으므로 잠깐 값을 바꿔치기했다가 되돌린다
    매물이 수백 개로 늘면 calc*(입력) 형태로 인자를 받게 바꿀 것. */
 function quote(p){
   const keep = { buyPrice:S.buyPrice, buyFee:S.buyFee, jeonseDep:S.jeonseDep,
@@ -1293,7 +1363,7 @@ const KID_WEIGHT = {
   "초등학교 도보 10분":1.35, "중학교 배정 확인":1.3, "어린이집·유치원":2.0,
   "학원가 접근":1.5, "공원·산책로":1.3, "경사 완만":1.3
 };
-/* 같은 항목도 유형에 따라 무게가 다르다.
+/* 같은 항목도 유형에 따라 무게가 다르다
    전세는 보증금을 떼일 위험이, 매매는 오래 사는 조건이 더 중요하다. */
 const TYPE_WEIGHT = {
   // 매매는 오래 산다 — 학군·재건축·환금성이 자산가치로 돌아온다
@@ -1335,9 +1405,9 @@ function areaScore(p, group){
   };
 }
 
-/* 자금은 계산 결과로 직접 판정한다.
-   - 부담률은 세전이 아니라 세후 추정 소득으로 잰다. 세전으로 재면 실제보다 관대해진다.
-   - 매매의 월 상환액에는 원금이 섞여 있다. 원금은 자산이 되므로 주거비에서 뺀다.
+/* 자금은 계산 결과로 직접 판정한다
+   - 부담률은 세전이 아니라 세후 추정 소득으로 잰다. 세전으로 재면 실제보다 관대해진다
+   - 매매의 월 상환액에는 원금이 섞여 있다. 원금은 자산이 되므로 주거비에서 뺀다
    - 소득이 없으면 판정하지 않는다(0점이 아니라 미확인). */
 const NET_RATIO = 0.82;   // 4대보험·소득세 차감 후 추정
 
@@ -1389,7 +1459,7 @@ function verdict(p){
   const wsum = scored.reduce((a, x) => a + x.weight, 0);
   const total = wsum ? scored.reduce((a, x) => a + x.weight * x.r.pct, 0) / wsum : null;
   const confidence = parts.reduce((a, x) => a + x.weight * x.r.confidence, 0);
-  // 자금만 채워도 등급이 나오면 안 된다. 입지가 절반은 채워져야 한다.
+  // 자금만 채워도 등급이 나오면 안 된다. 입지가 절반은 채워져야 한다
   const areaConf = parts.find(x => x.key === "area").r.confidence;
   const reliable = confidence >= 0.6 && areaConf >= 0.5;
 
@@ -1408,15 +1478,15 @@ function verdict(p){
   const worst = scored.length ? scored.slice().sort((a, b) => a.r.pct - b.r.pct)[0] : null;
   const bestPart = scored.length ? scored.slice().sort((a, b) => b.r.pct - a.r.pct)[0] : null;
   let line;
-  if (total === null) line = "아직 아무것도 확인하지 않았습니다.";
-  else if (!reliable) line = "확인한 항목이 적어 아직 판정할 수 없습니다.";
-  else if (killers.length) line = killers[0] + " — 이것부터 해결해야 합니다.";
-  else if (money.blocked) line = "지금 조건으로는 대출 자격이나 심사에서 걸립니다.";
-  else if (scored.length === parts.length && worst.r.pct >= 0.75) line = "네 영역 모두 무난합니다.";
-  else if (worst.key === "money") line = "다른 건 괜찮은데 자금이 빠듯합니다.";
+  if (total === null) line = "아직 아무것도 확인하지 않았습니다";
+  else if (!reliable) line = "확인한 항목이 적어 아직 판정할 수 없습니다";
+  else if (killers.length) line = killers[0] + " — 이것부터 해결해야 합니다";
+  else if (money.blocked) line = "지금 조건으로는 대출 자격이나 심사에서 걸립니다";
+  else if (scored.length === parts.length && worst.r.pct >= 0.75) line = "네 영역 모두 무난합니다";
+  else if (worst.key === "money") line = "다른 건 괜찮은데 자금이 빠듯합니다";
   else line = bestPart.r.pct >= 0.7
-      ? bestPart.name + "는 괜찮은데 " + worst.name + "에서 걸리는 게 있습니다."
-      : worst.name + "가 가장 약합니다.";
+      ? bestPart.name + "는 괜찮은데 " + worst.name + "에서 걸리는 게 있습니다"
+      : worst.name + "가 가장 약합니다";
 
   const weak = parts.filter(x => x.r.weak).reduce((a, x) => a.concat(x.r.weak), [])
                     .filter(k => killers.indexOf(k) < 0)
@@ -1431,10 +1501,10 @@ function renderVerdict(p){
   const pctText = r => r.pct === null ? "미확인" : Math.round(r.pct * 100) + "%";
   const money = v.money;
   const moneyLine = money.short > 0
-    ? "양가 지원금을 넣고도 <b>" + won(money.short) + "</b>이 더 필요합니다."
-    : "양가 지원금으로 계약금과 부대비용까지 덮습니다.";
+    ? "양가 지원금을 넣고도 <b>" + won(money.short) + "</b>이 더 필요합니다"
+    : "양가 지원금으로 계약금과 부대비용까지 덮습니다";
   const burdenLine = money.burden === null
-    ? "소득을 넣으면 부담률을 계산합니다."
+    ? "소득을 넣으면 부담률을 계산합니다"
     : "세후 소득 대비 주거비 <b>" + (money.burden * 100).toFixed(0) + "%</b>"
       + (money.principal ? " (월 상환액 중 원금 " + wonK(money.principal) + "은 자산이라 제외)" : "")
       + ". " + moneyLine;
@@ -1457,14 +1527,14 @@ function renderVerdict(p){
       <li>${burdenLine}</li>
       ${v.killers.length ? `<li class="vd-kill">계약을 미뤄야 하는 항목 — <b>${v.killers.join(" · ")}</b></li>` : ""}
       ${(() => { const m = marketRead(p);
-         if (!m) return `<li>${p.type === "buy" ? "같은 평형 실거래" : "참고 매매시세"}를 넣으면 ${p.type === "buy" ? "호가가 얼마나 붙었는지" : "전세가율"}를 계산합니다.</li>`;
-         if (m.ratio) return `<li>전세가율 <b>${m.text}</b>. ${m.bad ? "80%를 넘어 집값이 조금만 내려도 보증금이 위태롭습니다."
-           : m.warn ? "75%를 넘었습니다. 반환보증 가입은 필수입니다." : "안전한 구간입니다."}</li>`;
-         return `<li>같은 평형 실거래보다 <b>${m.text}</b>. ${m.bad ? "호가가 많이 붙었습니다. 협상 여지를 보세요." : "무리한 호가는 아닙니다."}</li>`; })()}
+         if (!m) return `<li>${p.type === "buy" ? "같은 평형 실거래" : "참고 매매시세"}를 넣으면 ${p.type === "buy" ? "호가가 얼마나 붙었는지" : "전세가율"}를 계산합니다</li>`;
+         if (m.ratio) return `<li>전세가율 <b>${m.text}</b>. ${m.bad ? "80%를 넘어 집값이 조금만 내려도 보증금이 위태롭습니다"
+           : m.warn ? "75%를 넘었습니다. 반환보증 가입은 필수입니다" : "안전한 구간입니다"}</li>`;
+         return `<li>같은 평형 실거래보다 <b>${m.text}</b>. ${m.bad ? "호가가 많이 붙었습니다. 협상 여지를 보세요" : "무리한 호가는 아닙니다"}</li>`; })()}
       ${v.weak.length ? `<li>걸리는 점 — <b>${v.weak.join(" · ")}</b></li>` : ""}
       ${v.next.length ? `<li>다음에 확인할 것 — ${v.next.join(" · ")}</li>` : ""}
-      ${!v.reliable ? `<li class="vd-warn">확인한 항목이 적어 등급을 매기지 않았습니다. 입지 17개를 절반 이상 채우면 판정이 나옵니다.</li>` : ""}
-      <li class="vd-warn">시세가 적정한지는 판단하지 않습니다. 실거래가는 국토부에서 직접 확인하세요.</li>
+      ${!v.reliable ? `<li class="vd-warn">확인한 항목이 적어 등급을 매기지 않았습니다. 입지 17개를 절반 이상 채우면 판정이 나옵니다</li>` : ""}
+      <li class="vd-warn">시세가 적정한지는 판단하지 않습니다. 실거래가는 국토부에서 직접 확인하세요</li>
     </ul>
   </div>`;
 }
@@ -1484,8 +1554,8 @@ function renderCompare(){
     .map(t => ({ t, name: TYPES[t], rows: ready.filter(p => p.type === t) }))
     .filter(g => g.rows.length);
   if (!groups.length) {
-    return props.length ? `<p class="cmp-empty">단지명과 금액을 넣으면 여기에서 비교됩니다.
-      ${pending ? "아직 " + pending + "건이 비어 있습니다." : ""}</p>` : "";
+    return props.length ? `<div class="cmp"><p class="cmp-empty">단지명과 금액을 넣으면 여기에서 비교됩니다
+      ${pending ? "아직 " + pending + "건이 비어 있습니다" : ""}</p></div>` : "";
   }
 
   const amount = p => p.type === "wolse"
@@ -1510,7 +1580,7 @@ function renderCompare(){
           ${quoted.map(({ p, q }) => {
             const t = tallyAll(p);
             return `<tr data-jump="${p.id}">
-              <th scope="row">${esc(p.name || "이름 없음")}${quoted.length > 1 && p === best.p ? '<span class="best">최저</span>' : ""}${p.area ? `<span class="cmp-area">${esc(p.area)}</span>` : ""}</th>
+              <th scope="row">${esc(p.name || "이름 없음")}${p.unit ? " " + esc(p.unit) : ""}${quoted.length > 1 && p === best.p ? '<span class="best">최저</span>' : ""}${p.area ? `<span class="cmp-area">${esc(p.area)}</span>` : ""}</th>
               <td class="v">${(() => { const v = verdict(p);
                 return v.grade ? `<span class="pill ${v.grade.tone}">${v.grade.label}</span>` : "—"; })()}</td>
               <td class="v cmp-score">${p.score == null ? "—" : p.score + "<span class=\"cmp-of\">/10</span>"}</td>
@@ -1525,10 +1595,10 @@ function renderCompare(){
         </tbody>
       </table></div>
     </div>`;
-  }).join("")}${pending ? `<p class="cmp-empty">${pending}건은 단지명이나 금액이 비어 있어 제외했습니다.</p>` : ""}</div>`;
+  }).join("")}${pending ? `<p class="cmp-empty">${pending}건은 단지명이나 금액이 비어 있어 제외했습니다</p>` : ""}</div>`;
 }
 
-/* 전세가율 = 보증금 ÷ 같은 면적 매매시세. 80%를 넘으면 보증금이 위태롭다.
+/* 전세가율 = 보증금 ÷ 같은 면적 매매시세. 80%를 넘으면 보증금이 위태롭다
    매매는 실거래 대비 호가가 얼마나 붙었는지를 본다. */
 function marketRead(p){
   if (!p.market || !p.price) return null;
@@ -1545,12 +1615,12 @@ function marketRead(p){
 function renderProps(){
   if (!db) return `
     <div class="prop-empty">
-      <p><b>${fbConfig() ? "저장소에 연결하지 못했습니다." : "매물 관리에는 공유 저장소가 필요합니다."}</b><br>
+      <p><b>${fbConfig() ? "저장소에 연결하지 못했습니다" : "매물 관리에는 공유 저장소가 필요합니다"}</b><br>
       ${fbConfig()
-        ? "상단 안내 문구를 확인해 주세요. Firestore 규칙을 아직 게시하지 않은 경우가 대부분입니다."
-        : "사진과 임장 기록을 담을 저장소가 이 주소에는 없습니다. README의 Firebase 설정을 마치면 열립니다."}</p>
+        ? "상단 안내 문구를 확인해 주세요. Firestore 규칙을 아직 게시하지 않은 경우가 대부분입니다"
+        : "사진과 임장 기록을 담을 저장소가 이 주소에는 없습니다. README의 Firebase 설정을 마치면 열립니다"}</p>
     </div>`;
-  if (!propsReady) return `<p class="prop-note">매물을 불러오는 중입니다.</p>`;
+  if (!propsReady) return `<p class="prop-note">매물을 불러오는 중입니다</p>`;
 
   const list = props.map(p => {
     const q = quote(p);
@@ -1562,11 +1632,32 @@ function renderProps(){
     const addShot = (p.thumbs || []).length < MAX_SHOTS
       ? `<label class="shot-add"><span>+</span>사진 추가
            <input type="file" accept="image/*" multiple hidden data-shot="${p.id}"></label>` : "";
+    if (!openProps[p.id]) {
+      const v = p.price ? verdict(p) : null;
+      const t = tallyAll(p);
+      return `
+      <button class="prop-brief${justAdded[p.id] ? " is-new" : ""}" type="button"
+              id="prop_${p.id}" data-open="${p.id}">
+        <span class="pr-main">
+          <span class="pr-name">${esc(p.name || "이름 없음")}${p.unit ? " " + esc(p.unit) : ""}</span>
+          <span class="pr-meta">${TYPES[p.type]}${p.area ? " · " + esc(p.area) : ""}${
+            p.price ? " · " + won(p.price * M) : ""}</span>
+        </span>
+        <span class="pr-side">
+          ${v && v.grade ? `<span class="pill ${v.grade.tone}">${v.grade.label}</span>` : ""}
+          <span class="pr-chk">${t.done}/${t.total}</span>
+        </span>
+      </button>`;
+    }
     return `
-    <div class="prop" id="prop_${p.id}">
+    <div class="prop${justAdded[p.id] ? " is-new" : ""}" id="prop_${p.id}">
       <div class="prop-head">
-        <input class="prop-name" data-f="name" data-id="${p.id}" value="${esc(p.name || "")}"
-               placeholder="단지명 · 동호수" aria-label="단지명">
+        <div class="prop-names">
+          <input class="prop-name" data-f="name" data-id="${p.id}" value="${esc(p.name || "")}"
+                 placeholder="단지명" aria-label="단지명">
+          <input class="prop-unit" data-f="unit" data-id="${p.id}" value="${esc(p.unit || "")}"
+                 placeholder="동 · 호수" aria-label="동호수">
+        </div>
         <select class="prop-area" data-f="area" data-id="${p.id}" aria-label="지역">
           <option value="">지역 선택</option>
           ${Object.keys(AREAS).map(sido => `<optgroup label="${sido}">
@@ -1583,9 +1674,6 @@ function renderProps(){
             ${Object.keys(TYPES).map(t =>
               `<button type="button" data-t="${t}" aria-pressed="${p.type === t}">${TYPES[t]}</button>`).join("")}
           </div>
-          <button class="prop-save" type="button" data-save="${p.id}"
-                  ${pending[p.id] ? "" : "disabled"}>${pending[p.id] ? "저장" : "저장됨"}</button>
-          <button class="prop-del" type="button" data-del="${p.id}">삭제</button>
         </div>
       </div>
       <div class="prop-nums">
@@ -1616,14 +1704,14 @@ function renderProps(){
       </div>
       <div class="prop-body">
         ${p.price ? renderVerdict(p) : ""}
-        <div class="score">
-          <div class="score-head">
-            <label for="sc_${p.id}">종합 점수</label>
-            <span class="score-v">${p.score == null ? "—" : p.score}<em>/ 10</em></span>
+        <div class="field score">
+          <label for="sc_${p.id}">종합 점수</label>
+          <div class="inputline">
+            <input id="sc_${p.id}" type="number" inputmode="numeric" min="0" max="10" step="1"
+                   data-score="${p.id}" value="${p.score == null ? "" : p.score}"
+                   placeholder="0 – 10">
+            <span class="unit">/ 10</span>
           </div>
-          <input id="sc_${p.id}" type="range" min="0" max="10" step="1"
-                 value="${p.score == null ? 5 : p.score}" data-score="${p.id}"
-                 aria-label="종합 점수">
         </div>
         ${CHECK_GROUPS.map(g => `
         <details class="chk-group" id="chk_${p.id}_${g.key}">
@@ -1642,6 +1730,12 @@ function renderProps(){
         <textarea class="prop-memo" data-f="memo" data-id="${p.id}"
           placeholder="메모 — 체크로 안 남는 것들. 중개사 이름과 연락처, 집주인 사정, 협상 여지">${esc(p.memo || "")}</textarea>
         <button class="btn-utility" type="button" data-fill="${p.id}">이 금액으로 계산기 채우기</button>
+        <div class="prop-actions">
+          <button class="prop-fold" type="button" data-fold="${p.id}">접기</button>
+          <button class="prop-del" type="button" data-del="${p.id}">삭제</button>
+          <button class="prop-save" type="button" data-save="${p.id}"
+                  ${pending[p.id] ? "" : "disabled"}>${pending[p.id] ? "저장" : "저장됨"}</button>
+        </div>
       </div>
     </div>`;
   }).join("");
@@ -1655,12 +1749,12 @@ function renderProps(){
     </div>
     ${compare ? `<details class="cmp-box" id="cmpBox" ${readyCount ? "open" : ""}><summary>매물 비교</summary>${compare}</details>` : ""}
     ${props.length ? list : `<div class="prop-empty">
-      <p><b>임장 가기 전에 먼저 만드세요.</b><br>
-      입지 16개를 지도앱으로 먼저 확인하면, 가볼 집과 안 가도 될 집이 갈립니다.<br>
-      호가만 넣으면 필요한 현금과 월 실부담도 바로 계산됩니다.</p>
+      <p><b>임장 가기 전에 먼저 만드세요</b><br>
+      입지 ${CHECK_GROUPS[0].items.length}개를 지도앱으로 먼저 확인하면, 가볼 집과 안 가도 될 집이 갈립니다<br>
+      호가만 넣으면 필요한 현금과 월 실부담도 바로 계산됩니다</p>
     </div>`}
-    <p class="prop-note">고친 내용은 <b>저장</b>을 눌러야 상대방 화면에 반영됩니다. 체크는 눌러서 <b>○ 좋음 → △ 보통 → ✕ 아쉬움 → 빈칸</b>으로 바뀝니다.<br>
-      사진은 올릴 때 자동으로 압축됩니다(긴 변 1400px). 매물당 ${MAX_SHOTS}장까지. 기록은 두 사람이 같이 보고 같이 고칩니다.</p>`;
+    <p class="prop-note">고친 내용은 <b>저장</b>을 눌러야 상대방 화면에 반영됩니다. 체크는 눌러서 <b>○ 좋음 → △ 보통 → ✕ 아쉬움 → 빈칸</b>으로 바뀝니다<br>
+      사진은 올릴 때 자동으로 압축됩니다(긴 변 1400px). 매물당 ${MAX_SHOTS}장까지. 기록은 두 사람이 같이 보고 같이 고칩니다</p>`;
 }
 
 function bindProps(){
@@ -1668,19 +1762,26 @@ function bindProps(){
   const add = document.getElementById("addProp");
   if (add) add.addEventListener("click", async () => {
     add.disabled = true;
+    add.innerHTML = '<span class="spin"></span>추가하는 중';
     try {
-      await db.collection(at("props")).add({
-        name:"", area:"", type:"buy", price:null, rent:null, fee:15, market:null, score:null,
+      const ref = await db.collection(at("props")).add({
+        name:"", unit:"", area:"", type:"buy", price:null, rent:null, fee:15, market:null, score:null,
         checks:{}, memo:"", photos:[], thumbs:[], createdAt: Date.now()
       });
-    } catch (e) { setSync(false, "매물을 추가하지 못했습니다"); }
-    add.disabled = false;
+      justAdded[ref.id] = true;
+      openProps[ref.id] = true;
+      setSync(true, "매물을 추가했습니다");
+    } catch (e) {
+      setSync(false, "매물을 추가하지 못했습니다");
+      add.disabled = false;
+      add.textContent = "매물 추가";
+    }
   });
 
   body.querySelectorAll("[data-f]").forEach(el => {
     const onEdit = () => {
       const id = el.dataset.id, f = el.dataset.f;
-      const TEXT_FIELDS = ["name", "memo", "area", "type"];
+      const TEXT_FIELDS = ["name", "unit", "memo", "area", "type"];
       const v = TEXT_FIELDS.indexOf(f) >= 0 ? el.value
               : (el.value === "" ? null : Number(el.value));
       const p = props.find(x => x.id === id); if (p) p[f] = v;
@@ -1708,6 +1809,9 @@ function bindProps(){
       p.checks = Object.assign({}, p.checks, { [key]: next });
       b.dataset.s = next;
       b.textContent = key + chipMark(next);
+      b.classList.remove("pop");
+      void b.offsetWidth;                       // 연속으로 눌러도 다시 재생되게
+      b.classList.add("pop");
       const group = CHECK_GROUPS.find(x => x.key === g.dataset.g);
       const counter = document.getElementById("cnt_" + id + "_" + g.dataset.g);
       if (group && counter) counter.textContent = checkCount(p, group);
@@ -1715,6 +1819,24 @@ function bindProps(){
     });
   });
 
+  Object.keys(justAdded).forEach(id => {
+    delete justAdded[id];
+    const card = document.getElementById("prop_" + id);
+    if (card) requestAnimationFrame(() =>
+      card.scrollIntoView({ behavior: "smooth", block: "center" }));
+  });
+  body.querySelectorAll("[data-open]").forEach(b => {
+    b.addEventListener("click", () => {
+      openProps[b.dataset.open] = true;
+      renderTab();
+    });
+  });
+  body.querySelectorAll("[data-fold]").forEach(b => {
+    b.addEventListener("click", () => {
+      delete openProps[b.dataset.fold];
+      renderTab();
+    });
+  });
   body.querySelectorAll("[data-save]").forEach(b => {
     b.addEventListener("click", () => saveProp(b.dataset.save));
     if (pending[b.dataset.save]) b.classList.add("is-dirty");
@@ -1732,7 +1854,13 @@ function bindProps(){
   });
   body.querySelectorAll("[data-del]").forEach(b => {
     b.addEventListener("click", () => {
-      if (b.dataset.armed === "1") { removeProp(b.dataset.del); return; }
+      if (b.dataset.armed === "1") {
+        delete openProps[b.dataset.del];
+        const card = document.getElementById("prop_" + b.dataset.del);
+        if (card) card.classList.add("is-leaving");
+        removeProp(b.dataset.del);
+        return;
+      }
       b.dataset.armed = "1";
       b.textContent = "한 번 더";
       clearTimeout(b.resetTimer);
@@ -1745,17 +1873,21 @@ function bindProps(){
     b.addEventListener("click", () => fillFromProp(b.dataset.fill));
   });
   body.querySelectorAll("[data-shot]").forEach(inp => {
-    inp.addEventListener("change", () => addShots(inp.dataset.shot, inp.files));
+    inp.addEventListener("change", async () => {
+      const tile = inp.closest(".shot-add");
+      if (tile) tile.classList.add("busy");
+      await addShots(inp.dataset.shot, inp.files);
+      if (tile) tile.classList.remove("busy");
+    });
   });
   body.querySelectorAll("[data-open]").forEach(b => {
     b.addEventListener("click", () => openShot(b.dataset.open, Number(b.dataset.i)));
   });
   body.querySelectorAll("[data-score]").forEach(el => {
     el.addEventListener("input", () => {
-      const id = el.dataset.score, v = Number(el.value);
+      const id = el.dataset.score;
+      const v = el.value === "" ? null : Math.max(0, Math.min(10, Number(el.value)));
       const p = props.find(x => x.id === id); if (p) p.score = v;
-      const out = el.closest(".score").querySelector(".score-v");
-      if (out) out.innerHTML = v + "<em>/ 10</em>";
       queueProp(id, { score: v });
     });
   });
@@ -1767,7 +1899,7 @@ function bindProps(){
   });
 }
 
-/* 편집은 pending에 모아 두고 저장 버튼을 눌러야 서버에 올린다.
+/* 편집은 pending에 모아 두고 저장 버튼을 눌러야 서버에 올린다
    두 사람이 같이 쓰므로, 저장하지 않은 값은 상대 화면에 반영되지 않는다. */
 function queueProp(id, patch){
   pending[id] = Object.assign({}, pending[id], patch);
@@ -1792,6 +1924,17 @@ async function saveProp(id){
     await db.doc(at("props/" + id)).update(patch);
     delete pending[id];
     setSync(true, "저장했습니다 · 상대방 화면에도 반영");
+    const done = document.querySelector('[data-save="' + id + '"]');
+    if (done) {
+      done.classList.remove("is-dirty");
+      done.classList.add("saved");
+      done.textContent = "저장됨 ✓";
+      setTimeout(() => {
+        delete openProps[id];
+        renderTab();
+      }, 900);
+      return;
+    }
   } catch (e) {
     setSync(false, "저장하지 못했습니다");
   }
@@ -1925,11 +2068,11 @@ function render(){
 
   const inc = incomes();
   document.getElementById("nameHint").innerHTML = inc.solo
-    ? `${WHO(S.who)} 소득 <b>${won(inc.self)}</b>만 잡힙니다. 디딤돌 주택가격 5억, 생애최초 한도 2.4억.`
-    : `낮은 쪽 <b>${won(inc.low)}</b>으로 심사합니다. 합산은 보지 않습니다.`;
+    ? `${WHO(S.who)} 소득 <b>${won(inc.self)}</b>만 잡힙니다. 디딤돌 주택가격 5억, 생애최초 한도 2.4억`
+    : `낮은 쪽 <b>${won(inc.low)}</b>으로 심사합니다. 합산은 보지 않습니다`;
   document.getElementById("babyHint").innerHTML = S.baby === "y"
-    ? `신생아 특례가 열립니다. <b>2년 이내 출생</b> 기준이고 임신 중이면 확인서로 됩니다.`
-    : `신생아 특례는 <b>2년 이내 출생</b> 자녀가 있어야 해서 전세 표에서 뺐습니다.`;
+    ? `신생아 특례가 열립니다 <b>2년 이내 출생</b> 기준이고 임신 중이면 확인서로 됩니다`
+    : `신생아 특례는 <b>2년 이내 출생</b> 자녀가 있어야 해서 전세 표에서 뺐습니다`;
 
   document.querySelectorAll("#tabs button").forEach(el =>
     el.setAttribute("aria-selected", el.dataset.t === S.tab));
@@ -1982,18 +2125,12 @@ function setSeg(id, v){
 /* ============ 입력 바인딩 ============ */
 function bindAmounts(){
   ["buyPrice","buyFee","buyLtm","jeonseDep","jeonseFee","wolseDep","wolseRent","wolseFee"].forEach(key => {
-    const range = document.getElementById(key);
     const num = document.getElementById(key + "_n");
-    if (!range || !num) return;
-    const apply = src => {
-      const v = Math.max(0, Number(src.value) || 0);   // 만원 단위, 소수 허용(장기수선충당금)
-      S[key] = v;
-      if (src !== num) num.value = v;
-      if (src !== range) range.value = v;
-      scheduleRerender(src === num ? 500 : 180);
-    };
-    range.addEventListener("input", () => apply(range));
-    num.addEventListener("input", () => apply(num));
+    if (!num) return;
+    num.addEventListener("input", () => {
+      S[key] = Math.max(0, Number(num.value) || 0);    // 만원 단위, 소수 허용(장기수선충당금)
+      scheduleRerender(500);
+    });
   });
 }
 
@@ -2073,8 +2210,8 @@ function share(){
 }
 
 /* ============ Firebase (GitHub Pages용 공유 저장소) ============
-   Firebase 콘솔의 "웹 앱에 Firebase 추가"에서 나오는 코드를 아래에 그대로 붙여넣으면 된다.
-   const firebaseConfig = { ... } 형태로 붙여도 인식한다.
+   Firebase 콘솔의 "웹 앱에 Firebase 추가"에서 나오는 코드를 아래에 그대로 붙여넣으면 된다
+   const firebaseConfig = { ... } 형태로 붙여도 인식한다
    이 값들은 비밀이 아니다. 접근 제어는 Firestore 규칙이 한다. */
 var FIREBASE = {
   apiKey: "AIzaSyBOuKVAosaiUAYVqxJf2kQjpajfvxSGiuo",
@@ -2086,8 +2223,8 @@ var FIREBASE = {
   measurementId: "G-VF2CLY761K"
 };
 
-/* 데이터는 rooms/<임의의 방 주소> 아래에 둔다.
-   방 주소는 링크에만 실려 있어서, 링크를 모르면 경로를 찾을 수 없다.
+/* 데이터는 rooms/<임의의 방 주소> 아래에 둔다
+   방 주소는 링크에만 실려 있어서, 링크를 모르면 경로를 찾을 수 없다
    아티팩트에서는 이미 아티팩트별로 격리되므로 접두어를 붙이지 않는다. */
 let roomPrefix = "";
 const at = path => roomPrefix + path;
