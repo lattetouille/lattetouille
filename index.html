@@ -11,7 +11,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
 /* ============================================================
@@ -190,7 +189,6 @@ button{font-family:inherit}
 /* ============================================================ app bar */
 .masthead{padding:var(--x5) 0 var(--x1)}
 .mast-top{display:flex;align-items:center;justify-content:space-between;gap:var(--x3)}
-.mast-actions{display:flex;gap:var(--x2);flex:none}
 .masthead h1{font-size:var(--t7);line-height:var(--lh7)}
 @media(min-width:480px){.masthead h1{font-size:var(--t8);line-height:var(--lh8)}}
 .sync{
@@ -680,10 +678,7 @@ summary:active{background:var(--bg-default-pressed)}
 <header class="masthead">
   <div class="mast-top">
     <h1>우리의 보금자리</h1>
-    <span class="mast-actions">
-      <button type="button" id="authBtn" class="btn-utility" hidden>로그인</button>
-      <button type="button" id="shareBtn" class="btn-utility">링크 복사</button>
-    </span>
+    <button type="button" id="shareBtn" class="btn-utility">링크 복사</button>
   </div>
   <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">불러오는 중</span></span>
   <div class="summary" id="summary"></div>
@@ -1550,9 +1545,9 @@ function marketRead(p){
 function renderProps(){
   if (!db) return `
     <div class="prop-empty">
-      <p><b>${fbConfig() ? "로그인하면 매물을 기록할 수 있습니다." : "매물 관리에는 공유 저장소가 필요합니다."}</b><br>
+      <p><b>${fbConfig() ? "저장소에 연결하지 못했습니다." : "매물 관리에는 공유 저장소가 필요합니다."}</b><br>
       ${fbConfig()
-        ? "오른쪽 위 로그인을 눌러 주세요. 사진과 임장 기록이 두 사람에게 함께 저장됩니다."
+        ? "상단 안내 문구를 확인해 주세요. Firestore 규칙을 아직 게시하지 않은 경우가 대부분입니다."
         : "사진과 임장 기록을 담을 저장소가 이 주소에는 없습니다. README의 Firebase 설정을 마치면 열립니다."}</p>
     </div>`;
   if (!propsReady) return `<p class="prop-note">매물을 불러오는 중입니다.</p>`;
@@ -1674,7 +1669,7 @@ function bindProps(){
   if (add) add.addEventListener("click", async () => {
     add.disabled = true;
     try {
-      await db.collection("props").add({
+      await db.collection(at("props")).add({
         name:"", area:"", type:"buy", price:null, rent:null, fee:15, market:null, score:null,
         checks:{}, memo:"", photos:[], thumbs:[], createdAt: Date.now()
       });
@@ -1794,7 +1789,7 @@ async function saveProp(id){
   const btn = document.querySelector('[data-save="' + id + '"]');
   if (btn) { btn.disabled = true; btn.textContent = "저장 중"; }
   try {
-    await db.doc("props/" + id).update(patch);
+    await db.doc(at("props/" + id)).update(patch);
     delete pending[id];
     setSync(true, "저장했습니다 · 상대방 화면에도 반영");
   } catch (e) {
@@ -1808,10 +1803,10 @@ async function removeProp(id){
   delete pending[id];
   setSync(true, "삭제하는 중입니다");
   for (const pid of (p && p.photos) || []) {
-    try { await db.doc("photos/" + pid).delete(); } catch (e) {}
+    try { await db.doc(at("photos/" + pid)).delete(); } catch (e) {}
   }
   try {
-    await db.doc("props/" + id).delete();
+    await db.doc(at("props/" + id)).delete();
     setSync(true, "매물을 삭제했습니다");
   } catch (e) { setSync(false, "삭제하지 못했습니다"); }
 }
@@ -1859,12 +1854,12 @@ async function addShots(id, files){
       const cap = (typeof firebase !== "undefined" && fbConfig()) ? 700000 : 190000;
       const full = await shrink(f, cap > 300000 ? 1800 : 1400, 0.78, cap);
       const thumb = await shrink(f, 240, 0.6, 24000);
-      const ref = await db.collection("photos").add({ propId: id, data: full, createdAt: Date.now() });
+      const ref = await db.collection(at("photos")).add({ propId: id, data: full, createdAt: Date.now() });
       photos.push(ref.id); thumbs.push(thumb);
     } catch (e) { skipped++; }
   }
   try {
-    await db.doc("props/" + id).update({ photos, thumbs });
+    await db.doc(at("props/" + id)).update({ photos, thumbs });
     setSync(true, skipped ? skipped + "장은 올리지 못했습니다" : "사진을 올렸습니다");
   } catch (e) { setSync(false, "사진 정보를 저장하지 못했습니다"); }
 }
@@ -1887,19 +1882,19 @@ async function openShot(id, index){
       close();
       const photos = p.photos.slice(), thumbs = p.thumbs.slice();
       photos.splice(index, 1); thumbs.splice(index, 1);
-      try { await db.doc("photos/" + pid).delete(); } catch (e2) {}
-      db.doc("props/" + id).update({ photos, thumbs })
+      try { await db.doc(at("photos/" + pid)).delete(); } catch (e2) {}
+      db.doc(at("props/" + id)).update({ photos, thumbs })
         .catch(() => setSync(false, "사진을 지우지 못했습니다"));
     }
   });
   try {
-    const snap = await db.doc("photos/" + pid).get();
+    const snap = await db.doc(at("photos/" + pid)).get();
     if (snap.exists) box.querySelector("img").src = snap.data().data;
   } catch (e) {}
 }
 
 function watchProps(){
-  db.collection("props").orderBy("createdAt", "desc").onSnapshot(snap => {
+  db.collection(at("props")).orderBy("createdAt", "desc").onSnapshot(snap => {
     props = snap.docs.map(d => {
       const base = Object.assign({ id: d.id }, d.data());
       return pending[d.id] ? Object.assign(base, pending[d.id]) : base;
@@ -2061,7 +2056,9 @@ function decodeState(b64){
   try { return JSON.parse(decodeURIComponent(escape(atob(b64)))); } catch (e) { return null; }
 }
 function syncHash(){
-  try { history.replaceState(null, "", "#s=" + encodeState()); } catch (e) {}
+  const h = hashParams();
+  // 서버에 저장하는 중이면 상태를 주소에 실을 필요가 없다
+  writeHash(db ? { room: h.room } : Object.assign({}, h, { s: encodeState() }));
 }
 function share(){
   syncHash();
@@ -2083,11 +2080,33 @@ var FIREBASE = {
   apiKey: "AIzaSyBOuKVAosaiUAYVqxJf2kQjpajfvxSGiuo",
   authDomain: "lattetouille-9c9c2.firebaseapp.com",
   projectId: "lattetouille-9c9c2",
-  storageBucket: "lattetouille-9c9c2.firebasestorage.app",
-  messagingSenderId: "973275930228",
-  appId: "1:973275930228:web:c071ecad0e1ad92e603b21",
-  measurementId: "G-VF2CLY761K"
+  appId: "1:973275930228:web:c071ecad0e1ad92e603b21"
 };
+
+/* 데이터는 rooms/<임의의 방 주소> 아래에 둔다.
+   방 주소는 링크에만 실려 있어서, 링크를 모르면 경로를 찾을 수 없다.
+   아티팩트에서는 이미 아티팩트별로 격리되므로 접두어를 붙이지 않는다. */
+let roomPrefix = "";
+const at = path => roomPrefix + path;
+
+function newRoomId(){
+  const a = new Uint8Array(12);
+  (self.crypto || self.msCrypto).getRandomValues(a);
+  return Array.from(a, b => b.toString(36).padStart(2, "0")).join("");
+}
+
+function hashParams(){
+  const o = {};
+  location.hash.replace(/^#/, "").split("&").forEach(kv => {
+    const i = kv.indexOf("=");
+    if (i > 0) o[kv.slice(0, i)] = kv.slice(i + 1);
+  });
+  return o;
+}
+function writeHash(o){
+  const q = Object.keys(o).filter(k => o[k]).map(k => k + "=" + o[k]).join("&");
+  try { history.replaceState(null, "", q ? "#" + q : location.pathname); } catch (e) {}
+}
 
 /* 어느 이름으로 붙여넣었든 찾아낸다. 없으면 null. */
 function fbConfig(){
@@ -2101,41 +2120,26 @@ async function connectFirebase(){
   const cfg = fbConfig();
   if (!cfg || typeof firebase === "undefined") return false;
   try { firebase.initializeApp(cfg); } catch (e) {}
-  const auth = firebase.auth();
   const store = firebase.firestore();
-  const btn = document.getElementById("authBtn");
-  btn.hidden = false;
 
-  const signIn = () => {
-    const p = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(p).catch(() => auth.signInWithRedirect(p));
-  };
-  btn.addEventListener("click", () => {
-    if (auth.currentUser) auth.signOut(); else signIn();
-  });
+  // 링크에 방 주소가 없으면 새로 만들고 주소창에 남긴다
+  const h = hashParams();
+  const room = h.room || newRoomId();
+  roomPrefix = "rooms/" + room + "/";
+  writeHash(Object.assign({}, h, { room }));
 
-  auth.onAuthStateChanged(user => {
-    if (!user){
-      db = null; docRef = null;
-      btn.textContent = "로그인";
-      setSync(false, "로그인하면 둘이 함께 볼 수 있습니다");
-      if (S.tab === "prop") renderTab();
-      return;
-    }
-    btn.textContent = "로그아웃";
-    db = store;
-    docRef = db.doc("plan/current");
-    setSync(true, (user.displayName || "로그인") + " · 둘이 함께 보는 중");
-    watchPlan();
-    watchProps();
-  });
+  db = store;
+  docRef = db.doc(at("plan/current"));
+  setSync(true, h.room ? "둘이 함께 보는 중" : "새 방을 만들었습니다 · 링크를 복사해 공유하세요");
+  watchPlan();
+  watchProps();
   return true;
 }
 
 /* ============ 저장 ============ */
 function localSave(){ try { localStorage.setItem("firsthome", JSON.stringify(S)); } catch (e) {} }
 function localLoad(){
-  const fromHash = location.hash.startsWith("#s=") ? decodeState(location.hash.slice(3)) : null;
+  const fromHash = hashParams().s ? decodeState(hashParams().s) : null;
   if (fromHash) { S = Object.assign({}, DEFAULT_STATE, fromHash); }
   else {
     try {
@@ -2178,7 +2182,7 @@ function watchPlan(){
 function storeError(e, what){
   const code = (e && (e.code || e.message) || "").toString();
   if (/permission|denied/i.test(code))
-    return what + " 접근이 거부되었습니다 — Firestore 규칙에 내 UID를 넣었는지 확인하세요";
+    return what + " 접근이 거부되었습니다 — Firestore 규칙을 게시했는지 확인하세요";
   return what + " 동기화가 끊겼습니다 — 이 기기에만 저장됩니다";
 }
 
@@ -2193,6 +2197,12 @@ async function connect(){
   watchPlan();
   watchProps();
 }
+
+/* 다른 방 링크를 열린 페이지에 붙여넣으면 해시만 바뀌고 재접속이 안 된다 */
+addEventListener("hashchange", () => {
+  const r = hashParams().room;
+  if (roomPrefix && r && roomPrefix !== "rooms/" + r + "/") location.reload();
+});
 
 /* ============ 시작 ============ */
 localLoad();
