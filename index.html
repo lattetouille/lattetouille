@@ -1,0 +1,2363 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리의 보금자리</title>
+<meta name="description" content="매매·전세·월세를 같은 조건으로 놓고 비교하는 주택 자금계산기">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+/* ============================================================
+   SEED Design tokens — daangn/seed-design 에서 가져온 실제 값
+   palette / semantic / radius / dimension / typography
+   ============================================================ */
+:root{
+  /* palette — light */
+  --seed-gray-00:#ffffff; --seed-gray-100:#f7f8f9; --seed-gray-200:#f3f4f5;
+  --seed-gray-300:#eeeff1; --seed-gray-400:#dcdee3; --seed-gray-500:#d1d3d8;
+  --seed-gray-600:#b0b3ba; --seed-gray-700:#868b94; --seed-gray-800:#555d6d;
+  --seed-gray-900:#2a3038; --seed-gray-1000:#1a1c20;
+  --seed-carrot-100:#fff2ec; --seed-carrot-200:#ffe8db; --seed-carrot-300:#ffd5c0;
+  --seed-carrot-600:#ff6600; --seed-carrot-700:#e14d00; --seed-carrot-800:#b93901;
+  --seed-blue-100:#eff6ff; --seed-blue-300:#cbdffa; --seed-blue-600:#5e98fe;
+  --seed-blue-700:#217cf9; --seed-blue-900:#0b4596;
+  --seed-red-100:#fdf0f0; --seed-red-300:#fed4d2; --seed-red-700:#fa342c; --seed-red-800:#ca1d13;
+  --seed-green-100:#edfaf6; --seed-green-300:#b9e9d2; --seed-green-700:#079171; --seed-green-800:#00745f;
+  --seed-yellow-100:#fff7de; --seed-yellow-300:#fbdc65; --seed-yellow-700:#9b7821;
+  --seed-black-a100:#00000007; --seed-black-a200:#0000000c; --seed-black-a300:#00000010;
+  --seed-black-a500:#0000002c;
+  --seed-static-white:#ffffff;
+
+  /* semantic — light */
+  --fg-neutral:var(--seed-gray-1000);
+  --fg-neutral-muted:var(--seed-gray-800);
+  --fg-neutral-subtle:var(--seed-gray-700);
+  --fg-placeholder:var(--seed-gray-600);
+  --fg-neutral-inverted:var(--seed-gray-00);
+  --fg-brand:var(--seed-carrot-600);
+  --fg-disabled:var(--seed-gray-500);
+  --fg-positive:var(--seed-green-700);
+  --fg-critical:var(--seed-red-700);
+  --fg-warning:var(--seed-yellow-700);
+  --fg-informative:var(--seed-blue-700);
+
+  --bg-basement:var(--seed-gray-200);
+  --bg-default:var(--seed-gray-00);
+  --bg-default-pressed:var(--seed-gray-100);
+  --bg-fill:var(--seed-gray-100);
+  --bg-brand-solid:var(--seed-carrot-600);
+  --bg-brand-solid-pressed:var(--seed-carrot-700);
+  --bg-brand-weak:var(--seed-carrot-100);
+  --bg-neutral-weak:var(--seed-gray-200);
+  --bg-neutral-weak-pressed:var(--seed-gray-300);
+  --bg-neutral-weak-alpha:var(--seed-black-a200);
+  --bg-neutral-solid-muted:var(--seed-gray-800);
+  --bg-disabled:var(--seed-gray-200);
+  --bg-positive-weak:var(--seed-green-100);
+  --bg-positive-solid:var(--seed-green-700);
+  --bg-critical-weak:var(--seed-red-100);
+  --bg-warning-weak:var(--seed-yellow-100);
+  --bg-informative-weak:var(--seed-blue-100);
+  --bg-overlay:#000000b3;
+
+  --stroke-neutral-subtle:var(--seed-black-a200);
+  --stroke-neutral-muted:var(--seed-black-a300);
+  --stroke-neutral-weak:var(--seed-gray-400);
+  --stroke-neutral-contrast:var(--seed-gray-1000);
+  --stroke-focus-ring:var(--seed-blue-600);
+  --indicator-white:var(--seed-gray-00);
+
+  /* radius */
+  --r1:4px; --r2:8px; --r2_5:10px; --r3:12px; --r4:16px; --r5:20px; --r6:24px; --r-full:9999px;
+  /* dimension */
+  --x1:4px; --x1_5:6px; --x2:8px; --x2_5:10px; --x3:12px; --x3_5:14px; --x4:16px;
+  --x5:20px; --x6:24px; --x8:32px; --x9:36px; --x10:40px; --x12:48px; --x13:52px;
+  --x14:56px; --x16:64px;
+  /* type — t{n}: size/line */
+  --t1:11px;  --lh1:15px;
+  --t2:12px;  --lh2:16px;
+  --t3:13px;  --lh3:18px;
+  --t4:14px;  --lh4:19px;
+  --t5:16px;  --lh5:22px;
+  --t6:18px;  --lh6:24px;
+  --t7:20px;  --lh7:27px;
+  --t8:22px;  --lh8:30px;
+  --t9:24px;  --lh9:32px;
+  --t10:26px; --lh10:35px;
+  --t12:32px; --lh12:42px;
+  --w-regular:400; --w-medium:500; --w-bold:700;
+  /* motion */
+  --ease:cubic-bezier(.35,0,.35,1);
+  --d-color:.15s;
+  --pressed:.96;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --seed-gray-00:#000000; --seed-gray-100:#16171b; --seed-gray-200:#1d2025;
+    --seed-gray-300:#2b2e35; --seed-gray-400:#393d46; --seed-gray-500:#5b606a;
+    --seed-gray-600:#868b94; --seed-gray-700:#b0b3ba; --seed-gray-800:#dcdee3;
+    --seed-gray-900:#e9eaec; --seed-gray-1000:#f3f4f5;
+    --seed-carrot-100:#31241f; --seed-carrot-200:#4b291c; --seed-carrot-300:#6b311c;
+    --seed-carrot-600:#e65200; --seed-carrot-700:#ff6600; --seed-carrot-800:#ff9e65;
+    --seed-blue-100:#202742; --seed-blue-300:#1a4275; --seed-blue-600:#1e82eb;
+    --seed-blue-700:#41a2f9; --seed-blue-900:#b9d7fb;
+    --seed-red-100:#322323; --seed-red-300:#742826; --seed-red-700:#ff6e60; --seed-red-800:#ffa299;
+    --seed-green-100:#202926; --seed-green-300:#20493b; --seed-green-500:#19604c;
+  --seed-green-700:#42c593; --seed-green-800:#7ddcb3;
+  --bg-positive-solid:var(--seed-green-500);
+    --seed-yellow-100:#2c2512; --seed-yellow-300:#4f3e1f; --seed-yellow-700:#e9c647;
+    --seed-white-a50:#ffffff0d; --seed-white-a100:#ffffff17; --seed-white-a200:#ffffff20;
+
+    --fg-brand:var(--seed-carrot-700);
+    --bg-basement:var(--seed-gray-00);
+    --bg-default:var(--seed-gray-100);
+    --bg-default-pressed:var(--seed-gray-300);
+    --bg-fill:var(--seed-gray-200);
+    --bg-brand-solid:var(--seed-carrot-700);
+    --bg-brand-solid-pressed:var(--seed-carrot-800);
+    --bg-neutral-weak:var(--seed-gray-300);
+    --bg-neutral-weak-pressed:var(--seed-gray-400);
+    --bg-neutral-weak-alpha:var(--seed-white-a200);
+    --bg-neutral-solid-muted:var(--seed-gray-400);
+    --bg-disabled:var(--seed-gray-300);
+    --stroke-neutral-subtle:var(--seed-white-a50);
+    --stroke-neutral-muted:var(--seed-white-a100);
+    --indicator-white:var(--seed-gray-400);
+  }
+}
+:root[data-theme="dark"]{
+  --seed-gray-00:#000000; --seed-gray-100:#16171b; --seed-gray-200:#1d2025;
+  --seed-gray-300:#2b2e35; --seed-gray-400:#393d46; --seed-gray-500:#5b606a;
+  --seed-gray-600:#868b94; --seed-gray-700:#b0b3ba; --seed-gray-800:#dcdee3;
+  --seed-gray-900:#e9eaec; --seed-gray-1000:#f3f4f5;
+  --seed-carrot-100:#31241f; --seed-carrot-200:#4b291c; --seed-carrot-300:#6b311c;
+  --seed-carrot-600:#e65200; --seed-carrot-700:#ff6600; --seed-carrot-800:#ff9e65;
+  --seed-blue-100:#202742; --seed-blue-300:#1a4275; --seed-blue-600:#1e82eb;
+  --seed-blue-700:#41a2f9; --seed-blue-900:#b9d7fb;
+  --seed-red-100:#322323; --seed-red-300:#742826; --seed-red-700:#ff6e60; --seed-red-800:#ffa299;
+  --seed-green-100:#202926; --seed-green-300:#20493b; --seed-green-500:#19604c;
+  --seed-green-700:#42c593; --seed-green-800:#7ddcb3;
+  --bg-positive-solid:var(--seed-green-500);
+  --seed-yellow-100:#2c2512; --seed-yellow-300:#4f3e1f; --seed-yellow-700:#e9c647;
+  --seed-white-a50:#ffffff0d; --seed-white-a100:#ffffff17; --seed-white-a200:#ffffff20;
+
+  --fg-brand:var(--seed-carrot-700);
+  --bg-basement:var(--seed-gray-00);
+  --bg-default:var(--seed-gray-100);
+  --bg-default-pressed:var(--seed-gray-300);
+  --bg-fill:var(--seed-gray-200);
+  --bg-brand-solid:var(--seed-carrot-700);
+  --bg-brand-solid-pressed:var(--seed-carrot-800);
+  --bg-neutral-weak:var(--seed-gray-300);
+  --bg-neutral-weak-pressed:var(--seed-gray-400);
+  --bg-neutral-weak-alpha:var(--seed-white-a200);
+  --bg-neutral-solid-muted:var(--seed-gray-400);
+  --bg-disabled:var(--seed-gray-300);
+  --stroke-neutral-subtle:var(--seed-white-a50);
+  --stroke-neutral-muted:var(--seed-white-a100);
+  --indicator-white:var(--seed-gray-400);
+}
+
+/* ============================================================ base */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg-basement);color:var(--fg-neutral);
+  font-family:"Noto Sans KR","Noto Sans",-apple-system,BlinkMacSystemFont,
+              "Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;
+  font-size:var(--t5);line-height:var(--lh5);font-weight:var(--w-regular);
+  font-variant-numeric:lining-nums;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+img{max-width:100%}
+h1,h2,h3{margin:0;font-weight:var(--w-bold)}
+.n{font-variant-numeric:tabular-nums lining-nums;white-space:nowrap}
+:focus-visible{outline:2px solid var(--stroke-focus-ring);outline-offset:2px}
+button{font-family:inherit}
+
+.wrap{
+  max-width:704px;margin:0 auto;
+  padding:0 var(--x4) calc(var(--x8) + env(safe-area-inset-bottom, 0px));
+}
+
+/* ============================================================ app bar */
+.masthead{padding:var(--x5) 0 var(--x1)}
+.mast-top{display:flex;align-items:center;justify-content:space-between;gap:var(--x3)}
+.masthead h1{font-size:var(--t7);line-height:var(--lh7)}
+.h1-emoji{font-size:.9em;line-height:1}
+@media(min-width:480px){.masthead h1{font-size:var(--t8);line-height:var(--lh8)}}
+.sync{
+  display:inline-flex;align-items:center;gap:var(--x1_5);margin-top:var(--x2);
+  font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle);
+}
+.dot{width:6px;height:6px;border-radius:var(--r-full);background:var(--fg-disabled);flex:none}
+.dot.live{background:var(--fg-positive)}
+
+/* ============================================================ summary */
+.summary{display:grid;gap:var(--x1_5);margin-top:var(--x3)}
+@media(min-width:600px){.summary{grid-template-columns:repeat(3,1fr)}}
+.sum{
+  appearance:none;text-align:left;width:100%;font:inherit;color:inherit;cursor:pointer;
+  position:relative;overflow:hidden;
+  background:var(--bg-default);border:none;border-radius:var(--r3);
+  padding:var(--x3) var(--x3_5);display:grid;gap:var(--x1_5);align-content:start;
+  box-shadow:inset 0 0 0 1px var(--stroke-neutral-subtle);
+  transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
+}
+.sum:active{background:var(--bg-default-pressed);scale:var(--pressed)}
+.sum[data-active="1"]{box-shadow:inset 0 0 0 1.5px var(--track)}
+.sum-top{display:flex;align-items:center;gap:var(--x1_5)}
+.sum-big{display:block}
+/* 그래프 대신 — 갈래를 알려주는 옅은 도장 */
+.sum-mark{
+  position:absolute;right:-10px;bottom:-14px;width:96px;height:96px;
+  color:var(--track);opacity:.09;pointer-events:none;
+  transform:rotate(-8deg);
+}
+:root[data-theme="dark"] .sum-mark{opacity:.16}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sum-mark{opacity:.16}}
+.sum-name{
+  font-size:var(--t3);line-height:var(--lh3);font-weight:var(--w-bold);
+  color:var(--track);
+  background:var(--track-weak);border-radius:var(--r-full);
+  padding:3px var(--x2);
+}
+.sum-sub{font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle);
+  margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sum-big{font-size:var(--t7);line-height:var(--lh7);font-weight:var(--w-bold);
+  white-space:nowrap;color:var(--track)}
+
+.sum-foot{display:flex;justify-content:space-between;align-items:baseline;gap:var(--x2);
+  font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle)}
+.sum-foot>span:first-child{flex:none}
+.sum-foot b{font-weight:var(--w-medium);color:var(--fg-neutral-muted);white-space:nowrap}
+
+/* ============================================================ card */
+.card{
+  margin-top:var(--x3);background:var(--bg-default);border-radius:var(--r3);
+  box-shadow:inset 0 0 0 1px var(--stroke-neutral-subtle);overflow:hidden;
+}
+.card-head{padding:var(--x3_5) var(--x4) 0}
+.card-head h2{font-size:var(--t5);line-height:var(--lh5)}
+.card-head p{margin:var(--x1) 0 0;font-size:var(--t3);line-height:var(--lh4);color:var(--fg-neutral-subtle)}
+.card-body{padding:var(--x3) var(--x4) var(--x4);display:grid;gap:var(--x3)}
+
+
+/* ============================================================ field / text-input */
+.field{display:grid;gap:var(--x1)}
+.field label,.field>label{
+  font-size:var(--t4);line-height:var(--lh4);font-weight:var(--w-bold);color:var(--fg-neutral);
+}
+.hint{font-size:var(--t3);line-height:var(--lh4);color:var(--fg-neutral-subtle)}
+.hint b{font-weight:var(--w-bold);color:var(--fg-neutral-muted);white-space:nowrap}
+
+.inputline{
+  display:flex;align-items:center;background:var(--bg-default);
+  border-radius:var(--r2);box-shadow:inset 0 0 0 1px var(--stroke-neutral-weak);
+  min-height:var(--x10);transition:box-shadow var(--d-color) var(--ease);
+}
+.inputline:focus-within{box-shadow:inset 0 0 0 2px var(--stroke-neutral-contrast)}
+.inputline input{
+  flex:1;min-width:0;width:100%;background:none;border:0;outline:none;
+  color:var(--fg-neutral);font-weight:var(--w-medium);font-size:var(--t4);line-height:var(--lh4);
+  font-variant-numeric:tabular-nums lining-nums;text-align:right;
+  padding:var(--x2) 0 var(--x2) var(--x3);
+  -moz-appearance:textfield;
+}
+.inputline input::-webkit-outer-spin-button,
+.inputline input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.inputline input::placeholder{color:var(--fg-placeholder)}
+.inputline .unit{
+  flex:none;padding:0 var(--x3) 0 var(--x1);
+  font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle);
+}
+.grid2{display:grid;gap:var(--x3);grid-template-columns:1fr 1fr}
+
+/* ============================================================ segmented control */
+.seg{
+  display:flex;gap:2px;padding:2px;
+  background:var(--bg-neutral-weak-alpha);border-radius:var(--r-full);
+}
+.seg button{
+  flex:1;min-height:30px;padding:var(--x1) var(--x2);cursor:pointer;
+  background:transparent;border:0;border-radius:var(--r-full);
+  color:var(--fg-neutral-subtle);font-weight:var(--w-bold);font-size:var(--t3);line-height:var(--lh3);
+  transition:background-color var(--d-color) var(--ease),color var(--d-color) var(--ease),
+             box-shadow var(--d-color) var(--ease),scale .15s var(--ease);
+}
+.seg button:active{scale:var(--pressed)}
+.seg button[aria-pressed="true"]{
+  color:var(--fg-neutral);background:var(--indicator-white);
+  box-shadow:inset 0 0 0 1px var(--stroke-neutral-muted);
+}
+
+/* ============================================================ amount */
+.amount-in{
+  width:100%;min-width:0;background:none;border:0;outline:none;text-align:right;
+  color:var(--fg-neutral);font-weight:var(--w-bold);font-size:var(--t5);line-height:var(--lh5);
+  font-variant-numeric:tabular-nums lining-nums;
+  padding:var(--x1) 0 var(--x1) var(--x2_5);
+  -moz-appearance:textfield;
+}
+.amount-in::-webkit-outer-spin-button,.amount-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.inputline .amount-in{font-size:var(--t5);line-height:var(--lh5)}
+
+/* ============================================================ tabs */
+.tabs{
+  display:flex;position:sticky;top:0;z-index:5;
+  background:var(--bg-default);box-shadow:inset 0 -1px var(--stroke-neutral-muted);
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{
+  flex:1;min-width:68px;min-height:40px;padding:var(--x2);cursor:pointer;
+  background:none;border:0;color:var(--fg-neutral-subtle);
+  font-weight:var(--w-bold);font-size:var(--t4);line-height:var(--lh4);position:relative;
+  transition:color var(--d-color) var(--ease);
+}
+.tabs button::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:var(--fg-neutral);opacity:0;transition:opacity var(--d-color) var(--ease);
+}
+.tabs button[aria-selected="true"]{color:var(--fg-neutral)}
+.tabs button[aria-selected="true"]::after{opacity:1}
+.tabs button:active{scale:var(--pressed)}
+
+/* ============================================================ table */
+.tablewrap{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  margin:0 calc(var(--x4) * -1);padding:0;
+}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:var(--t4);line-height:var(--lh4)}
+th,td{padding:var(--x1_5) var(--x2_5);text-align:right;white-space:nowrap;vertical-align:baseline;
+  border-bottom:1px solid var(--stroke-neutral-subtle)}
+th:first-child,td:first-child{
+  text-align:left;position:sticky;left:0;z-index:1;background:var(--bg-default);
+  font-weight:var(--w-regular);color:var(--fg-neutral-subtle);
+  white-space:nowrap;padding-left:var(--x4);padding-right:var(--x4);
+  box-shadow:1px 0 0 var(--stroke-neutral-subtle);
+}
+tr>*:last-child{padding-right:var(--x4)}
+thead th{
+  font-size:var(--t4);line-height:var(--lh4);font-weight:var(--w-bold);color:var(--fg-neutral);
+  white-space:nowrap;vertical-align:bottom;padding-bottom:var(--x2_5);
+  border-bottom:1px solid var(--stroke-neutral-muted);
+}
+thead th:first-child{color:var(--fg-neutral-subtle);font-weight:var(--w-medium)}
+td.v{font-variant-numeric:tabular-nums lining-nums;white-space:nowrap}
+tr.hi td{background:var(--bg-fill)}
+tr.hi td:first-child{background:var(--bg-fill);color:var(--fg-neutral-muted)}
+tr.hi td.v{font-weight:var(--w-bold);color:var(--fg-neutral)}
+
+.scroll-hint{
+  margin:0;font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle);
+}
+@media(min-width:560px){.scroll-hint{display:none}}
+
+/* badge / pill */
+.pill{
+  display:inline-block;padding:2px var(--x2);border-radius:var(--r-full);
+  font-size:var(--t3);line-height:var(--lh3);font-weight:var(--w-bold);white-space:nowrap;
+}
+.pill.ok{background:var(--bg-positive-weak);color:var(--fg-positive)}
+.pill.warn{background:var(--bg-warning-weak);color:var(--fg-warning)}
+.pill.off{background:var(--bg-neutral-weak);color:var(--fg-neutral-subtle)}
+.best{
+  display:inline-block;margin-left:var(--x1_5);padding:2px var(--x2);border-radius:var(--r-full);
+  background:var(--bg-brand-solid);color:var(--seed-static-white);
+  font-size:var(--t2);line-height:var(--lh2);font-weight:var(--w-bold);vertical-align:1px;
+}
+
+/* ============================================================ pick (callout-like) */
+.pick{
+  border-radius:var(--r3);background:var(--bg-brand-weak);overflow:hidden;
+}
+.pick-top{padding:var(--x3) var(--x3_5);display:grid;gap:1px}
+.pick-eyebrow{font-size:var(--t2);line-height:var(--lh2);font-weight:var(--w-bold);color:var(--fg-brand)}
+.pick-name{font-size:var(--t5);line-height:var(--lh5);font-weight:var(--w-bold);color:var(--fg-neutral)}
+.pick-why{margin:var(--x1) 0 0;font-size:var(--t3);line-height:var(--lh4);color:var(--fg-neutral-muted)}
+.pick-metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--stroke-neutral-muted)}
+@media(min-width:560px){.pick-metrics{grid-template-columns:repeat(4,1fr)}}
+.pick-metrics div{background:var(--bg-default);padding:var(--x2_5) var(--x3);display:grid;gap:1px}
+.pick-metrics .k{font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle);white-space:nowrap}
+.pick-metrics .v{font-size:var(--t3);line-height:var(--lh4);font-weight:var(--w-bold);
+  font-variant-numeric:tabular-nums lining-nums;white-space:nowrap}
+@media(min-width:400px){.pick-metrics .v{font-size:var(--t4)}}
+@media(min-width:560px){.pick-metrics .v{font-size:var(--t5);line-height:var(--lh5)}}
+
+/* ============================================================ notes */
+.notes-box{
+  margin:0;background:var(--bg-fill);border-radius:var(--r2_5);box-shadow:none;
+}
+.notes-box>summary{
+  padding:var(--x2_5) var(--x3_5);font-size:var(--t3);line-height:var(--lh3);
+  color:var(--fg-neutral-muted);
+}
+.notes-box>summary::after{content:"펼치기";font-size:var(--t3)}
+.notes-box[open]>summary::after{content:"접기"}
+.notes-box[open]>summary{padding-bottom:var(--x1)}
+.notes{margin:0;padding:0 var(--x3_5) var(--x3_5);list-style:none;display:grid;gap:var(--x2)}
+.notes li{
+  font-size:var(--t3);line-height:var(--lh4);color:var(--fg-neutral-subtle);
+  padding-left:var(--x3);position:relative;
+}
+.notes li::before{
+  content:"";position:absolute;left:0;top:6px;width:3px;height:3px;
+  border-radius:var(--r-full);background:var(--fg-disabled);
+}
+.notes li b{font-weight:var(--w-bold);color:var(--fg-neutral-muted);white-space:nowrap}
+
+/* ============================================================ buttons */
+.btn-primary{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:var(--x10);padding:0 var(--x4);cursor:pointer;white-space:nowrap;
+  background:var(--bg-brand-solid);color:var(--seed-static-white);border:0;
+  border-radius:var(--r2);font-weight:var(--w-bold);font-size:var(--t4);line-height:var(--lh4);
+  transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
+}
+.btn-primary:active{background:var(--bg-brand-solid-pressed);scale:var(--pressed)}
+.btn-primary:disabled{background:var(--bg-disabled);color:var(--fg-disabled);cursor:not-allowed}
+.btn-utility{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:var(--x9);padding:0 var(--x3_5);cursor:pointer;white-space:nowrap;
+  background:var(--bg-neutral-weak);color:var(--fg-neutral);border:0;
+  border-radius:var(--r2);font-weight:var(--w-bold);font-size:var(--t4);line-height:var(--lh4);
+  transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
+}
+.btn-utility:active{background:var(--bg-neutral-weak-pressed);scale:var(--pressed)}
+#resetParams{justify-self:start}
+
+/* ============================================================ details */
+details{
+  margin-top:var(--x3);background:var(--bg-default);border-radius:var(--r3);
+  box-shadow:inset 0 0 0 1px var(--stroke-neutral-subtle);overflow:hidden;
+}
+summary{
+  padding:var(--x3_5) var(--x4);cursor:pointer;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;gap:var(--x3);
+  font-size:var(--t4);line-height:var(--lh4);font-weight:var(--w-bold);
+}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"펼치기";font-weight:var(--w-medium);font-size:var(--t3);line-height:var(--lh3);color:var(--fg-brand)}
+details[open] summary::after{content:"접기"}
+summary:active{background:var(--bg-default-pressed)}
+.det-body{padding:var(--x3_5) var(--x4) var(--x4);border-top:1px solid var(--stroke-neutral-subtle);
+  display:grid;gap:var(--x3_5)}
+.param-grid{display:grid;gap:var(--x3);grid-template-columns:1fr 1fr}
+.param-grid label{font-size:var(--t3);line-height:var(--lh3);font-weight:var(--w-medium);color:var(--fg-neutral-muted)}
+.param-grid .inputline{min-height:var(--x9)}
+.param-grid input{font-size:var(--t4);line-height:var(--lh4);padding-left:var(--x3)}
+.param-grid .unit{font-size:var(--t3);padding:0 var(--x3) 0 var(--x1)}
+
+.foot{
+  margin:var(--x5) 0 0;padding:0 var(--x1);
+  font-size:var(--t1);line-height:var(--lh2);color:var(--fg-neutral-subtle);
+}
+.foot b{font-weight:var(--w-bold);color:var(--fg-neutral-subtle)}
+.foot b{font-weight:var(--w-bold);color:var(--fg-neutral-muted)}
+
+/* ============================================================ 매물 */
+.cmp-box{margin:0;background:var(--bg-fill);border-radius:var(--r2_5);box-shadow:none}
+.cmp-box>summary{padding:var(--x2_5) var(--x3_5);font-size:var(--t4);line-height:var(--lh4)}
+.cmp-box>summary::after{content:"접기";font-size:var(--t3)}
+.cmp-box:not([open])>summary::after{content:"펼치기"}
+.cmp{display:grid;gap:var(--x3);padding:0 var(--x3_5) var(--x3_5)}
+.cmp-group{display:grid;gap:var(--x1_5)}
+.cmp-head{display:flex;align-items:baseline;gap:var(--x2)}
+.cmp-title{font-size:var(--t3);line-height:var(--lh3);font-weight:var(--w-bold);color:var(--fg-neutral)}
+.cmp-n{font-size:var(--t2);line-height:var(--lh2);color:var(--fg-neutral-subtle)}
+.cmp .tablewrap{margin:0;padding:0}
+.cmp-table th:first-child,.cmp-table td:first-child{padding-left:var(--x3)}
+.cmp-table tr>*:last-child{padding-right:var(--x3)}
+.cmp-table{min-width:700px;background:var(--bg-default);border-radius:var(--r2);overflow:hidden}
+.cmp-table th:first-child,.cmp-table td:first-child{
+  background:var(--bg-default);color:var(--fg-neutral);font-weight:var(--w-bold);
+  white-space:nowrap;min-width:120px;
+}
+.cmp-table thead th{font-size:var(--t2);line-height:var(--lh2);padding-bottom:var(--x1_5)}
+.cmp-table thead th:first-child{color:var(--fg-neutral-subtle);font-weight:var(--w-medium)}
+.cmp-table td{font-size:var(--t3);line-height:var(--lh3)}
+.cmp-table tbody tr{cursor:pointer}
+.cmp-table tbody tr:active td,.cmp-table tbody tr:active th{background:var(--bg-default-pressed)}
+.cmp-table tbody tr:last-child td,.cmp-table tbody tr:last-child th{border-bottom:0}
+.cmp-bad{color:var(--fg-critical);font-weight:var(--w-bold)}
+.cmp-empty{margin:0;padding:0 0 var(--x1);font-size:var(--t3);line-height:var(--lh4);
+  color:var(--fg-neutral-subtle)}
+.cmp-score{font-weight:var(--w-bold);color:var(--fg-neutral)}
+.cmp-area{display:block;font-size:var(--t2);line-height:var(--lh2);
+  font-weight:var(--w-regular);color:var(--fg-neutral-subtle)}
+.cmp-sub{display:block;font-size:var(--t2);line-height:var(--lh2);
+  font-weight:var(--w-regular);color:var(--fg-neutral-subtle)}
+.cmp-of{font-weight:var(--w-regular);color:var(--fg-neutral-subtle);font-size:var(--t2)}
+
+.prop-bar{display:flex;align-items:center;justify-content:space-between;gap:var(--x3)}
+.prop-count{font-size:var(--t4);line-height:var(--lh4);color:var(--fg-neutral-subtle);white-space:nowrap}
+.prop-empty{
+  padding:var(--x8) var(--x5);text-align:center;
+  background:var(--bg-fill);border-radius:var(--r3);
+}
+.prop-empty p{margin:0;font-size:var(--t4);line-height:var(--lh5);color:var(--fg-neutral-subtle)}
+.prop-empty b{color:var(--fg-neutral)}
+
+.prop{border-radius:var(--r3);background:var(--bg-fill);overflow:hidden;display:grid}
+
+.prop-brief{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:var(--x3);
+  padding:var(--x3) var(--x3_5);cursor:pointer;text-align:left;
+  background:var(--bg-fill);border:0;border-radius:var(--r3);font-family:inherit;
+  transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
+}
+.prop-brief:active{background:var(--bg-neutral-weak-pressed);scale:var(--pressed)}
+.prop-brief.is-new{animation:cardIn .3s var(--ease) both}
+.pr-main{display:grid;gap:2px;min-width:0}
+.pr-name{
+  font-size:var(--t4);line-height:var(--lh4);font-weight:var(--w-bold);color:var(--fg-neutral);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.pr-meta{
+  font-size:var(--t2);line-height:var(--lh2);color:var(--fg-neutral-subtle);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.pr-side{display:flex;align-items:center;gap:var(--x2);flex:none}
+.pr-chk{font-size:var(--t2);line-height:var(--lh2);color:var(--fg-neutral-subtle);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.prop-head{padding:var(--x4) var(--x4) var(--x3);display:grid;gap:var(--x2)}
+.prop-names{display:grid;grid-template-columns:1.6fr 1fr;gap:var(--x2)}
+.prop-name,.prop-unit,.prop-area{
+  width:100%;min-height:var(--x10);padding:var(--x2) var(--x3);
+  background:var(--bg-default);color:var(--fg-neutral);border:0;outline:none;
+  border-radius:var(--r2);box-shadow:inset 0 0 0 1px var(--stroke-neutral-weak);
+  font-family:inherit;font-size:var(--t4);line-height:var(--lh4);
+  transition:box-shadow var(--d-color) var(--ease);
+}
+.prop-name{font-weight:var(--w-bold);font-size:var(--t5);line-height:var(--lh5)}
+.prop-name:focus,.prop-unit:focus,.prop-area:focus{
+  box-shadow:inset 0 0 0 2px var(--stroke-neutral-contrast);
+}
+.prop-name::placeholder,.prop-unit::placeholder{color:var(--fg-placeholder)}
+.prop-area{
+  color:var(--fg-neutral-subtle);
+  appearance:none;-webkit-appearance:none;padding-right:var(--x8);
+  background-image:linear-gradient(45deg,transparent 50%,var(--fg-neutral-subtle) 50%),
+                   linear-gradient(135deg,var(--fg-neutral-subtle) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+}
+.prop-row{display:flex;gap:var(--x2);align-items:center;flex-wrap:wrap}
+.prop-type{display:flex;gap:var(--x1_5)}
+.prop-type button{
+  min-height:var(--x8);padding:0 var(--x3);cursor:pointer;
+  background:var(--bg-default);color:var(--fg-neutral);border:0;
+  border-radius:var(--r-full);box-shadow:inset 0 0 0 1px var(--stroke-neutral-muted);
+  font-weight:var(--w-medium);font-size:var(--t4);line-height:1;
+  transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
+}
+.prop-type button:active{scale:var(--pressed)}
+.prop-type button[aria-pressed="true"]{
+  background:var(--bg-neutral-solid-muted);color:var(--seed-static-white);
+  box-shadow:none;font-weight:var(--w-bold);
+}
+.prop-actions{
+  display:flex;align-items:center;gap:var(--x2);
+  padding-top:var(--x3);border-top:1px solid var(--stroke-neutral-subtle);
+}
+.prop-fold{
+  min-height:var(--x10);padding:0 var(--x3_5);cursor:pointer;
+  background:transparent;border:0;border-radius:var(--r2);
+  color:var(--fg-neutral-subtle);font-family:inherit;font-weight:var(--w-medium);
+  font-size:var(--t4);line-height:1;
+}
+.prop-fold:active{background:var(--bg-neutral-weak-pressed)}
+.prop-save{
+  margin-left:auto;min-height:var(--x10);padding:0 var(--x5);cursor:pointer;
+  background:var(--bg-neutral-weak);color:var(--fg-neutral-subtle);border:0;
+  border-radius:var(--r2);font-family:inherit;font-weight:var(--w-bold);
+  font-size:var(--t4);line-height:1;
+  transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
+}
+.prop-save.is-dirty{background:var(--bg-brand-solid);color:var(--seed-static-white)}
+.prop-save:disabled{cursor:default;opacity:.7}
+.prop-save:not(:disabled):active{scale:var(--pressed)}
+.prop-del{
+  min-height:var(--x10);padding:0 var(--x3_5);cursor:pointer;
+  background:transparent;border:0;border-radius:var(--r2);
+  color:var(--fg-neutral-subtle);font-weight:var(--w-medium);font-size:var(--t4);line-height:1;
+}
+.prop-del:active{background:var(--bg-neutral-weak-pressed)}
+.prop-del[data-armed="1"]{
+  background:var(--bg-critical-weak);color:var(--fg-critical);font-weight:var(--w-bold);
+}
+
+.prop-nums{display:grid;grid-template-columns:1fr 1fr;gap:var(--x2_5);padding:0 var(--x4) var(--x3)}
+.prop-nums .inputline{min-height:var(--x10)}
+.prop-nums input{font-size:var(--t4);padding-left:var(--x3)}
+.prop-nums .unit{font-size:var(--t3);padding:0 var(--x3) 0 var(--x1)}
+
+.prop-quote{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--stroke-neutral-muted)}
+@media(min-width:520px){.prop-quote{grid-template-columns:repeat(4,1fr)}}
+.prop-quote div{background:var(--bg-default);padding:var(--x3);display:grid;gap:2px}
+.prop-quote .k{font-size:var(--t3);line-height:var(--lh3);color:var(--fg-neutral-subtle);white-space:nowrap}
+.prop-quote .v{font-size:var(--t3);line-height:var(--lh4);font-weight:var(--w-bold);
+  font-variant-numeric:tabular-nums lining-nums;white-space:nowrap}
+@media(min-width:400px){.prop-quote .v{font-size:var(--t4)}}
+
+.prop-body{padding:var(--x3_5);display:grid;gap:var(--x2_5);background:var(--bg-default)}
+.vd{display:grid;gap:var(--x2_5);padding:var(--x3);background:var(--bg-fill);border-radius:var(--r2_5)}
+.vd-top{display:flex;align-items:center;gap:var(--x2)}
+.vd-line{flex:1;font-size:var(--t4);line-height:var(--lh4);font-weight:var(--w-bold);color:var(--fg-neutral)}
+.vd-num{font-size:var(--t6);line-height:1;font-weight:var(--w-bold);color:var(--fg-brand);
+  font-variant-numeric:tabular-nums}
+.vd-bars{display:grid;gap:var(--x1)}
+.vd-row{display:flex;align-items:center;gap:var(--x2)}
+.vd-k{flex:none;width:32px;font-size:var(--t2);line-height:var(--lh2);color:var(--fg-neutral-subtle)}
+.vd-bar{flex:1;height:4px;background:var(--bg-neutral-weak);border-radius:var(--r-full);overflow:hidden}
+.vd-bar i{display:block;height:100%;background:var(--fg-brand);border-radius:var(--r-full)}
+.vd-p{flex:none;width:44px;text-align:right;font-size:var(--t2);line-height:var(--lh2);
+  color:var(--fg-neutral-muted);font-variant-numeric:tabular-nums}
+.vd-notes{margin:0;padding:0;list-style:none;display:grid;gap:var(--x1_5)}
+.vd-notes li{font-size:var(--t3);line-height:var(--lh4);color:var(--fg-neutral-subtle)}
+.vd-notes b{font-weight:var(--w-bold);color:var(--fg-neutral-muted)}
+.vd-notes .vd-warn{color:var(--fg-neutral-subtle);opacity:.85}
+.vd-notes .vd-kill{color:var(--fg-critical)}
+.vd-notes .vd-kill b{color:var(--fg-critical)}
+
+.score .inputline{max-width:180px}
+.score input{font-weight:var(--w-bold);color:var(--fg-brand)}
+
+.chk-group{
+  margin:0;background:var(--bg-fill);border-radius:var(--r2_5);box-shadow:none;
+}
+.chk-group>summary{
+  padding:var(--x2_5) var(--x3);gap:var(--x2);
+  font-size:var(--t3);line-height:var(--lh3);font-weight:var(--w-regular);
+}
+.chk-group>summary::after{content:"";display:none}
+.chk-title{font-size:var(--t4);line-height:var(--lh4);font-weight:var(--w-bold);color:var(--fg-neutral)}
+.chk-count{font-size:var(--t2);line-height:var(--lh2);color:var(--fg-neutral-subtle);white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:var(--x1_5);padding:0 var(--x3) var(--x3)}
+.chip{
+  min-height:28px;padding:0 var(--x2);cursor:pointer;
+  background:var(--bg-default);color:var(--fg-neutral);border:0;
+  border-radius:var(--r-full);box-shadow:inset 0 0 0 1px var(--stroke-neutral-muted);
+  font-weight:var(--w-medium);font-size:var(--t2);line-height:1;
+  transition:background-color var(--d-color) var(--ease),scale .15s var(--ease);
+}
+.chip:active{scale:var(--pressed)}
+.chip[data-s="y"]{background:var(--bg-positive-solid);color:var(--seed-static-white);
+  box-shadow:none;font-weight:var(--w-bold)}
+.chip[data-s="m"]{background:var(--bg-warning-weak);color:var(--fg-warning);
+  box-shadow:none;font-weight:var(--w-bold)}
+.chip[data-s="n"]{background:var(--bg-critical-weak);color:var(--fg-critical);
+  box-shadow:none;font-weight:var(--w-bold)}
+.chip-reset{color:var(--fg-neutral-subtle);box-shadow:none;background:transparent;
+  text-decoration:underline;text-underline-offset:2px}
+.prop-memo{
+  width:100%;padding:var(--x2_5);background:var(--bg-default);color:var(--fg-neutral);
+  border:0;border-radius:var(--r2);box-shadow:inset 0 0 0 1px var(--stroke-neutral-weak);
+  font-weight:var(--w-regular);font-size:var(--t3);line-height:var(--lh4);resize:vertical;min-height:64px;outline:none;
+}
+.prop-memo:focus{box-shadow:inset 0 0 0 2px var(--stroke-neutral-contrast)}
+.prop-memo::placeholder{color:var(--fg-placeholder)}
+
+.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:var(--x2)}
+.shot{
+  position:relative;aspect-ratio:1;border-radius:var(--r2);overflow:hidden;padding:0;
+  border:0;box-shadow:inset 0 0 0 1px var(--stroke-neutral-muted);
+  background:var(--bg-fill);cursor:pointer;
+}
+.shot:active{scale:var(--pressed)}
+.shot img{width:100%;height:100%;object-fit:cover;display:block}
+.shot-add{
+  display:grid;place-content:center;gap:2px;aspect-ratio:1;cursor:pointer;
+  border-radius:var(--r2);background:var(--bg-fill);
+  box-shadow:inset 0 0 0 1px var(--stroke-neutral-muted);
+  color:var(--fg-neutral-subtle);font-weight:var(--w-medium);font-size:var(--t3);line-height:1.3;text-align:center;
+}
+.shot-add span{font-size:var(--t7);font-weight:var(--w-regular);color:var(--fg-neutral-subtle)}
+.prop-note{font-size:var(--t3);line-height:var(--lh4);color:var(--fg-neutral-subtle);margin:0}
+.prop-note b{font-weight:var(--w-bold);color:var(--fg-neutral-muted)}
+
+.lightbox{
+  position:fixed;inset:0;z-index:50;background:var(--bg-overlay);
+  display:grid;place-items:center;padding:var(--x5);
+}
+.lightbox img{max-width:100%;max-height:80vh;border-radius:var(--r2);display:block}
+.lightbox-bar{
+  position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;
+  gap:var(--x3);padding:var(--x3_5) var(--x4);
+}
+.lightbox-bar button{
+  height:var(--x9);padding:0 var(--x3_5);cursor:pointer;
+  background:#ffffff24;color:#fff;border:0;border-radius:var(--r2);
+  font-weight:var(--w-bold);font-size:var(--t4);line-height:1;
+}
+.lightbox-bar button:active{scale:var(--pressed)}
+
+/* ============ 동작 피드백 ============ */
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(-10px) scale(.985)}
+  to{opacity:1;transform:none}
+}
+.prop.is-new{animation:cardIn .3s var(--ease) both}
+.prop.is-leaving{
+  opacity:0;transform:scale(.98);
+  transition:opacity .2s var(--ease),transform .2s var(--ease);
+}
+
+@keyframes chipPop{
+  0%{transform:scale(1)} 45%{transform:scale(1.13)} 100%{transform:scale(1)}
+}
+.chip.pop{animation:chipPop .22s var(--ease)}
+
+@keyframes savedPop{
+  0%{transform:scale(1)} 40%{transform:scale(1.1)} 100%{transform:scale(1)}
+}
+.prop-save.saved{
+  background:var(--bg-positive-solid);color:var(--seed-static-white);opacity:1;
+  animation:savedPop .3s var(--ease);
+}
+
+@keyframes shotPulse{0%,100%{opacity:1} 50%{opacity:.45}}
+.shot-add.busy{animation:shotPulse .9s ease-in-out infinite}
+
+@keyframes btnSpin{to{transform:rotate(360deg)}}
+.btn-primary .spin{
+  display:inline-block;width:12px;height:12px;margin-right:var(--x1_5);
+  border:2px solid currentColor;border-right-color:transparent;border-radius:var(--r-full);
+  animation:btnSpin .7s linear infinite;vertical-align:-1px;
+}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scale:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="mast-top">
+    <h1>우리의 보금자리 <span class="h1-emoji" aria-hidden="true">🏡</span></h1>
+    <button type="button" id="shareBtn" class="btn-utility">링크 복사</button>
+  </div>
+  <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">불러오는 중</span></span>
+  <div class="summary" id="summary"></div>
+</header>
+
+<div class="card">
+  <div class="card-head">
+    <h2>내 조건</h2>
+  </div>
+  <div class="card-body">
+    <div class="grid2">
+      <div class="field">
+        <label for="incA">남편 연소득</label>
+        <div class="inputline"><input id="incA" type="number" inputmode="numeric" step="100"><span class="unit">만원</span></div>
+      </div>
+      <div class="field">
+        <label for="incB">아내 연소득</label>
+        <div class="inputline"><input id="incB" type="number" inputmode="numeric" step="100"><span class="unit">만원</span></div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="gift">양가 지원금</label>
+      <div class="inputline"><input id="gift" type="number" inputmode="numeric" step="500"><span class="unit">만원</span></div>
+      <span class="hint">소득은 세전 기준. 증여는 혼인신고 전후 2년 이내면 1인 1.5억까지 비과세</span>
+    </div>
+    <div class="field">
+      <label>신청 명의</label>
+      <div class="seg" id="segName">
+        <button data-v="couple" type="button">부부 합산</button>
+        <button data-v="solo" type="button">단독 명의</button>
+      </div>
+      <span class="hint" id="nameHint"></span>
+    </div>
+    <div class="field">
+      <label>자녀</label>
+      <div class="seg" id="segBaby">
+        <button data-v="n" type="button">없음</button>
+        <button data-v="y" type="button">있음</button>
+      </div>
+      <span class="hint" id="babyHint"></span>
+    </div>
+    <div class="field" id="soloPick" hidden>
+      <label>단독 신청자</label>
+      <div class="seg" id="segWho">
+        <button data-v="A" type="button">남편</button>
+        <button data-v="B" type="button">아내</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="tabs" id="tabs" role="tablist">
+    <button role="tab" data-t="buy" type="button">매매</button>
+    <button role="tab" data-t="jeonse" type="button">전세</button>
+    <button role="tab" data-t="wolse" type="button">월세</button>
+    <button role="tab" data-t="prop" type="button">매물</button>
+  </div>
+  <div class="card-body" id="calcBody"></div>
+</div>
+
+<details id="paramsBox">
+  <summary>가정값 · 금리와 한도</summary>
+  <div class="det-body">
+    <p class="hint" style="margin:0">정책이 바뀌면 여기만 고칩니다. 금액은 만원, 금리는 % 단위. 신청 직전에 주택도시기금 1566-9009, 주택금융공사 1688-8114로 확인하세요</p>
+    <div class="param-grid" id="paramGrid"></div>
+    <button type="button" id="resetParams" class="btn-utility">기본값으로 되돌리기</button>
+  </div>
+</details>
+
+<p class="foot">
+  <b>추정치입니다</b> 실제 승인액은 감정가·신용·심사에 따라 달라집니다. 사전 한도 조회 결과를 서면으로 받아 이 숫자와 대조하세요<br>
+  <b>2026.08.13 대책의 결혼페널티 해소 기준으로 계산합니다</b> 부부 중 낮은 쪽 소득으로 심사 — 보금자리론 7,000만원 / 디딤돌 6,000만원 / 버팀목 5,000만원
+  보금자리론만 2026년 10월 시행이 확정됐고 디딤돌·버팀목은 하반기 예정입니다. 계약 시점이 시행 전이면 단독 명의를 대비책으로 두세요<br>
+  취득세 1.0%(6억 이하) · 생애최초 감면 200만원 한도 · 전용 85㎡ 이하 농특세 비과세 · 수도권 규제지역 만기 30년 기준
+</p>
+
+</div>
+
+<script>
+"use strict";
+
+/* ============ 기본 파라미터 (엑셀 '가정값' 블록) ============ */
+const DEFAULTS = {
+  ltv: 70, years: 30, marginalRate: 16.5,
+  limDidimdol: 32000, limDidimdolSolo: 24000, limBogeum: 42000, limBank: 60000,
+  roomDeduct: 4800,
+  rDidimdol: 3.85, rBogeum: 4.30, rBank: 4.20, rStress: 3.00,
+  gongsiRatio: 68, bondRate: 2.6, bondDiscount: 9.0, fairRatio: 44,
+  feeBuy: 0.4, legalEtc: 66.5, mcgFee: 45,
+  jRatio: 80,
+  limYouth: 15000, limNewlywed: 30000, limBaby: 30000, limJBank: 50000,
+  rYouth: 2.50, rNewlywed: 2.70, rBaby: 2.30, rJBank: 4.00,
+  capYouthInc: 5000, capNewlywedInc: 7500, capBabyInc: 20000,
+  capYouthDep: 30000, capNewlywedDep: 40000,
+  feeJeonse: 0.3, guaranteeRate: 0.122, jEtc: 8.5,
+  convRate: 4.5,
+  wDepLimit: 4500, wDepRate: 1.30,
+  wRentLimit: 50, wRentFree: 20, wRentRate: 1.00,
+  wTargetDep: 6500, wTargetRent: 70, wIncCap: 5000,
+  hRentLimit: 60, hRentRate: 1.80, hTargetDep: 10000, hTargetRent: 60,
+  wTaxCap: 1000, wTax17: 5500, wTax0: 8000,
+  incBogeum: 7000, incDidimdol: 6000, incNewlywed: 5000
+};
+
+const PARAM_META = [
+  ["ltv","LTV","%"],["years","대출기간","년"],["marginalRate","한계세율","%"],
+  ["rDidimdol","디딤돌 금리","%"],["rBogeum","보금자리 금리","%"],
+  ["rBank","은행 주담대 금리","%"],["rStress","스트레스 가산","%p"],
+  ["limDidimdol","디딤돌 한도(신혼)","만원"],["limDidimdolSolo","디딤돌 한도(단독)","만원"],
+  ["limBogeum","보금자리 한도","만원"],["roomDeduct","방공제","만원"],
+  ["feeBuy","매매 중개보수","%"],["gongsiRatio","공시가격 비율","%"],
+  ["fairRatio","재산세 공정시장가액비율","%"],
+  ["jRatio","전세대출 비율","%"],["limYouth","청년 버팀목 한도","만원"],
+  ["limNewlywed","신혼 버팀목 한도","만원"],["limJBank","은행 전세대출 한도","만원"],
+  ["rYouth","청년 버팀목 금리","%"],["rNewlywed","신혼 버팀목 금리","%"],
+  ["rJBank","은행 전세대출 금리","%"],["feeJeonse","전세 중개보수","%"],
+  ["guaranteeRate","반환보증료율(연)","%"],["convRate","전월세전환율","%"],
+  ["wDepLimit","청년월세 보증금한도","만원"],["wRentLimit","청년월세 월한도","만원"],
+  ["hRentLimit","주거안정 월한도","만원"],["hRentRate","주거안정 금리","%"],
+  ["wTaxCap","월세 공제한도(연)","만원"],
+  ["incBogeum","보금자리 소득기준(1인)","만원"],
+  ["incDidimdol","디딤돌 소득기준(1인)","만원"],
+  ["incNewlywed","신혼버팀목 소득기준(1인)","만원"]
+];
+
+const DEFAULT_STATE = {
+  incA: 3600, incB: 4900, gift: 10000,
+  nameMode: "couple", who: "A", baby: "n",
+  tab: "buy",
+  buyPrice: 41400, buyFee: 15, buyLtm: 1.5,
+  jeonseDep: 31000, jeonseFee: 15,
+  wolseDep: 2000, wolseRent: 100, wolseFee: 15,
+  params: {}
+};
+
+let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+let db = null, docRef = null, saveTimer = null;
+
+const P = k => {
+  const v = S.params && S.params[k];
+  return (v === undefined || v === null || v === "") ? DEFAULTS[k] : Number(v);
+};
+const M = 10000;
+const pmt = (r, n, pv) => r === 0 ? pv / n : pv * r / (1 - Math.pow(1 + r, -n));
+const WHO = w => w === "A" ? "남편" : "아내";
+
+function won(n){
+  n = Math.round(n);
+  const neg = n < 0; n = Math.abs(n);
+  const eok = Math.floor(n / 1e8), man = Math.floor((n % 1e8) / 1e4), rest = n % 1e4;
+  let s = "";
+  if (eok) s += eok + "억 ";
+  if (man) s += man.toLocaleString("ko-KR") + "만 ";
+  if (rest || !s) s += rest.toLocaleString("ko-KR");
+  return (neg ? "−" : "") + s.trim() + "원";
+}
+const wonK = n => won(Math.round(n / 1000) * 1000);
+const pct = n => (n * 100).toFixed(1) + "%";
+
+/* 재산세 — 공시가격 × 공정시장가액비율에 누진세율, 도시지역분·지방교육세 포함
+   공시 9억 이하 1세대 1주택이면 특례세율을 적용한다. */
+function propertyTax(gongsi){
+  const base = gongsi * (P("fairRatio") / 100);
+  let tax;
+  if (gongsi <= 9e8) {
+    if (base <= 6e7) tax = base * 0.0005;
+    else if (base <= 1.5e8) tax = 30000 + (base - 6e7) * 0.001;
+    else if (base <= 3e8) tax = 120000 + (base - 1.5e8) * 0.002;
+    else tax = 420000 + (base - 3e8) * 0.0035;
+  } else {
+    if (base <= 6e7) tax = base * 0.001;
+    else if (base <= 1.5e8) tax = 60000 + (base - 6e7) * 0.0015;
+    else if (base <= 3e8) tax = 195000 + (base - 1.5e8) * 0.0025;
+    else tax = 570000 + (base - 3e8) * 0.004;
+  }
+  return tax + base * 0.0014 + tax * 0.2;   // 본세 + 도시지역분 + 지방교육세
+}
+
+function incomes(){
+  const a = S.incA * M, b = S.incB * M;
+  const solo = S.nameMode === "solo";
+  const self = S.who === "A" ? a : b;
+  return {
+    a, b, sum: a + b, low: Math.min(a, b), solo, self,
+    // 8·13 대책 결혼페널티 해소 — 부부 중 낮은 쪽 소득으로 심사
+    judged: solo ? self : Math.min(a, b),
+    dtiBase: solo ? self : a + b
+  };
+}
+
+/* ============ 매매 ============ */
+function calcBuy(){
+  const price = S.buyPrice * M, mgmt = S.buyFee * M, ltm = S.buyLtm * M, inc = incomes();
+  const ltv = P("ltv") / 100, yrs = P("years"), n = yrs * 12;
+  const limDidim = inc.solo ? P("limDidimdolSolo") * M : P("limDidimdol") * M;
+  const rows = [
+    { key:"didimdol", name:"디딤돌", rate:P("rDidimdol")/100, cap:limDidim,
+      incCap:P("incDidimdol")*M,
+      priceCap:(inc.solo?5e8:6e8), dti:0.60, taxCap:2000*M },
+    { key:"bogeum", name:"보금자리론", rate:P("rBogeum")/100, cap:P("limBogeum")*M,
+      incCap:P("incBogeum")*M,
+      priceCap:6e8, dti:0.60, taxCap:2000*M },
+    { key:"bank", name:"은행 주담대", rate:P("rBank")/100, cap:P("limBank")*M,
+      incCap:Infinity, priceCap:Infinity, dti:0.40, taxCap:800*M, stress:P("rStress")/100 }
+  ];
+  const acq = price * 0.01 - Math.min(price * 0.01, 2000000);
+  const eduTax = price * 0.001;
+  const broker = price * (P("feeBuy")/100) * 1.1;
+  const bond = price * (P("gongsiRatio")/100) * (P("bondRate")/100) * (P("bondDiscount")/100);
+  const closing = acq + eduTax + broker + bond + P("legalEtc")*M + P("mcgFee")*M;
+  const gongsi = price * (P("gongsiRatio")/100);
+  const deductible = gongsi <= 6e8;
+  const propTax = propertyTax(gongsi);
+  const holdMonthly = mgmt + ltm + propTax/12;   // 소유하는 동안 매달 나가는 돈
+
+  const out = rows.map(r => {
+    const blocked = price > r.priceCap ? "주택가격 초과"
+                  : inc.judged > r.incCap ? "소득 초과" : null;
+    const loan = blocked && r.key !== "bank" ? 0 : Math.min(price * ltv, r.cap);
+    const own = price - loan;
+    const cashNeed = own + closing;
+    const monthly = loan ? pmt(r.rate/12, n, loan) : 0;
+    const judgeAnnual = loan ? pmt((r.rate + (r.stress||0))/12, n, loan) * 12 : 0;
+    const ratio = inc.dtiBase ? judgeAnnual / inc.dtiBase : 0;
+    const taxSave = deductible ? Math.min(loan * r.rate, r.taxCap) * (P("marginalRate")/100) : 0;
+    // 2년간 이자 = 상환 총액 − 그동안 줄어든 원금
+    const r12 = r.rate / 12;
+    const bal24 = loan ? (r12 ? loan*Math.pow(1+r12,24) - monthly*((Math.pow(1+r12,24)-1)/r12)
+                              : loan - monthly*24) : 0;
+    const interest2y = loan ? monthly*24 - (loan - bal24) : 0;
+    return { ...r, blocked, loan, own, closing, cashNeed, mgmt, ltm, propTax,
+      cashAfterGift: cashNeed - S.gift*M,
+      monthly, netMonthly: monthly + holdMonthly - taxSave/12,
+      ratio, pass: !blocked && ratio <= r.dti,
+      totalInterest: monthly * n - loan, taxSave, interest2y,
+      cost2y: interest2y + closing + (mgmt + ltm)*24 + propTax*2 - taxSave*2 };
+  });
+  const best = out.filter(r => !r.blocked && r.pass)
+                  .sort((x,y) => x.netMonthly - y.netMonthly)[0] || out[2];
+  return { price, mgmt, ltm, propTax, rows: out, best, closing, gongsi, deductible };
+}
+
+/* ============ 전세 ============ */
+function calcJeonse(){
+  const dep = S.jeonseDep * M, mgmt = S.jeonseFee * M, inc = incomes();
+  const ratio = P("jRatio") / 100;
+  const rows = [
+    { key:"youth", name:"청년 버팀목", rate:P("rYouth")/100, cap:P("limYouth")*M,
+      incCap:P("capYouthInc")*M, depCap:P("capYouthDep")*M, soloOnly:true },
+    { key:"newlywed", name:"신혼 버팀목", rate:P("rNewlywed")/100, cap:P("limNewlywed")*M,
+      incCap:P("incNewlywed")*M, depCap:P("capNewlywedDep")*M },
+    // 신생아 특례는 2년 이내 출생 자녀가 있을 때만 열을 만든다
+    ...(S.baby === "y" ? [{ key:"baby", name:"신생아 특례", rate:P("rBaby")/100,
+      cap:P("limBaby")*M, incCap:P("capBabyInc")*M, depCap:Infinity }] : []),
+    { key:"bank", name:"은행 전세대출", rate:P("rJBank")/100, cap:P("limJBank")*M,
+      incCap:Infinity, depCap:Infinity }
+  ];
+  const fees = dep*(P("feeJeonse")/100)*1.1 + dep*(P("guaranteeRate")/100)*2 + P("jEtc")*M;
+  const out = rows.map(r => {
+    const judgeInc = r.soloOnly ? (inc.solo ? inc.self : inc.sum) : inc.judged;
+    const blocked = judgeInc > r.incCap ? "소득 초과"
+                  : dep > r.depCap ? "보증금 초과" : null;
+    const loan = blocked ? 0 : Math.min(dep * ratio, r.cap);
+    const own = dep - loan;
+    const monthly = loan * r.rate / 12;
+    const taxSave = Math.min(monthly*12*0.4, 4000000) * (P("marginalRate")/100);
+    return { ...r, blocked, loan, own, fees, mgmt, cashNeed: own + fees,
+      cashAfterGift: own + fees - S.gift*M,
+      monthly, netMonthly: monthly + mgmt - taxSave/12, taxSave, total2y: monthly*24,
+      cost2y: monthly*24 + fees + mgmt*24 - taxSave*2 };
+  });
+  const best = out.filter(r => !r.blocked)
+                  .sort((x,y) => x.netMonthly - y.netMonthly)[0] || out[out.length-1];
+  return { dep, mgmt, rows: out, best, fees };
+}
+
+/* ============ 월세 ============ */
+function calcWolse(){
+  const dep = S.wolseDep * M, rent = S.wolseRent * M, mgmt = S.wolseFee * M;
+  const inc = incomes();
+  const taxIncome = inc.solo ? inc.self : Math.max(inc.a, inc.b);
+  const months = 24;
+  const houseInc = inc.solo ? inc.self : inc.sum;
+  const eligYouth = dep <= P("wTargetDep")*M && rent <= P("wTargetRent")*M && houseInc <= P("wIncCap")*M;
+  const eligHousing = dep <= P("hTargetDep")*M && rent <= P("hTargetRent")*M;
+  const eligJeonseLoan = dep <= P("capYouthDep")*M && houseInc <= P("capYouthInc")*M;
+  const depYouth = eligYouth ? Math.min(P("wDepLimit")*M, dep*(P("jRatio")/100)) : 0;
+  const depBtm   = eligJeonseLoan ? Math.min(P("limYouth")*M, dep*(P("jRatio")/100)) : 0;
+  const avgFactor = (months + 1) / 2 / 12;
+  const rentYouth = eligYouth ? Math.min(rent, P("wRentLimit")*M) : 0;
+  const rentHouse = eligHousing ? Math.min(rent, P("hRentLimit")*M) : 0;
+  const taxRate = taxIncome > P("wTax0")*M ? 0 : taxIncome <= P("wTax17")*M ? 0.17 : 0.15;
+  const taxCredit = Math.min(rent*12, P("wTaxCap")*M) * taxRate;
+  const fees = (dep + rent*100)*(P("feeJeonse")/100)*1.1 + P("jEtc")*M;
+
+  function combo(name, depLoan, depRate, rentLoan, rentRate, freeFloor, blocked){
+    const depInt = depLoan * depRate / 12;
+    const rentInt = Math.max(0, rentLoan - freeFloor) * rentRate * avgFactor;
+    const ownRent = rent - rentLoan;
+    const cash = (dep - depLoan) + fees;
+    const monthlyCash = depInt + rentInt + ownRent + mgmt;
+    // 빌려서 낸 월세도 집주인에게 이미 나간 돈이므로 소멸 비용에 포함한다
+    return { name, blocked, depLoan, rentLoan, cashNeed: cash,
+      cashAfterGift: cash - S.gift*M,
+      depInt, rentInt, ownRent, mgmt, monthly: monthlyCash,
+      netMonthly: monthlyCash - taxCredit/12, principal2y: rentLoan*months,
+      cost2y: monthlyCash*months + rentLoan*months + fees - taxCredit*2 };
+  }
+  const rows = [
+    combo("청년 보증부월세", depYouth, P("wDepRate")/100, rentYouth, P("wRentRate")/100,
+          P("wRentFree")*M, eligYouth ? null : "대상 아님"),
+    combo("버팀목+주거안정", depBtm, P("rYouth")/100, rentHouse, P("hRentRate")/100,
+          0, (eligJeonseLoan||eligHousing) ? null : "대상 아님"),
+    combo("대출 없음", 0, 0, 0, 0, 0, null)
+  ];
+  const best = rows.filter(r => !r.blocked)
+                   .sort((x,y) => x.netMonthly - y.netMonthly)[0] || rows[2];
+  return { dep, rent, rows, best, taxRate, taxCredit, fees };
+}
+
+/* ============ 요약 ============ */
+const ICONS = {
+  buy: '<path d="M2.5 10.2 12 2.6l9.5 7.6V20a1.4 1.4 0 0 1-1.4 1.4h-4.7v-6.2H8.6v6.2H3.9A1.4 1.4 0 0 1 2.5 20z"/>',
+  jeonse: '<path d="M15.5 2a6.5 6.5 0 0 0-6.2 8.5l-7 7V22h4.4v-2.3h2.3v-2.3h2.3l1.4-1.4A6.5 6.5 0 1 0 15.5 2zm1.8 5.6a1.7 1.7 0 1 1-2.4-2.4 1.7 1.7 0 0 1 2.4 2.4z"/>',
+  wolse: '<path d="M7 2v2.2H4.6A1.6 1.6 0 0 0 3 5.8v14.6A1.6 1.6 0 0 0 4.6 22h14.8a1.6 1.6 0 0 0 1.6-1.6V5.8a1.6 1.6 0 0 0-1.6-1.6H17V2h-2.2v2.2H9.2V2zm12 8v10.2H5V10z"/>'
+};
+
+function renderSummary(b, j, w){
+  const items = [
+    { name:"매매", tab:"buy",    sub:b.best.name, r:b.best,
+      color:"var(--fg-informative)", weak:"var(--bg-informative-weak)" },
+    { name:"전세", tab:"jeonse", sub:j.best.name, r:j.best,
+      color:"var(--fg-positive)",    weak:"var(--bg-positive-weak)" },
+    { name:"월세", tab:"wolse",  sub:w.best.name, r:w.best,
+      color:"var(--fg-brand)",       weak:"var(--bg-brand-weak)" }
+  ];
+  document.getElementById("summary").innerHTML = items.map(i => `
+    <button class="sum" type="button" data-go="${i.tab}"
+            ${S.tab === i.tab ? 'data-active="1"' : ""}
+            style="--track:${i.color};--track-weak:${i.weak}">
+      <svg class="sum-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${ICONS[i.tab]}</svg>
+      <span class="sum-top">
+        <span class="sum-name">${i.name}</span>
+        <span class="sum-sub">${i.sub}</span>
+      </span>
+      <span class="sum-big n">${wonK(i.r.netMonthly)}</span>
+      <span class="sum-foot"><span>계약 시 현금</span><b class="n">${won(i.r.cashNeed)}</b></span>
+      <span class="sum-foot"><span>2년 거주비용</span><b class="n">${won(i.r.cost2y)}</b></span>
+    </button>`).join("");
+}
+
+/* ============ 금액 입력 + 슬라이더 ============ */
+function amountBlock(id, label, val, step){
+  return `<div class="field">
+    <label for="${id}_n">${label}</label>
+    <div class="inputline">
+      <input id="${id}_n" class="amount-in" type="number" inputmode="numeric"
+             step="${step}" min="0" value="${val}">
+      <span class="unit">만원</span>
+    </div>
+  </div>`;
+}
+function pickCard(name, why, metrics){
+  return `<div class="pick">
+    <div class="pick-top">
+      <span class="pick-eyebrow">가장 유리한 선택</span>
+      <span class="pick-name">${name}</span>
+      <p class="pick-why">${why}</p>
+    </div>
+    <div class="pick-metrics">
+      ${metrics.map(m => `<div><span class="k">${m[0]}</span><span class="v">${m[1]}</span></div>`).join("")}
+    </div>
+  </div>`;
+}
+function badge(r){
+  if (r.blocked) return `<span class="pill off">${r.blocked}</span>`;
+  if (r.pass === false) return `<span class="pill warn">DTI 초과</span>`;
+  return `<span class="pill ok">가능</span>`;
+}
+
+function renderBuy(){
+  const c = calcBuy(), best = c.best;
+  // 최적으로 뽑힌 상품을 맨 왼쪽에 세운다
+  const cols = [best].concat(c.rows.filter(r => r !== best));
+  const row = (label, fn, cls) => `<tr class="${cls||""}">
+    <th scope="row">${label}</th>${cols.map(r => `<td class="v">${fn(r)}</td>`).join("")}</tr>`;
+  return `
+  ${amountBlock("buyPrice","매수가",S.buyPrice,100)}
+  <div class="grid2">
+    ${amountBlock("buyFee","월 관리비",S.buyFee,1)}
+    ${amountBlock("buyLtm","장기수선충당금",S.buyLtm,0.5)}
+  </div>
+  ${pickCard(best.name,
+    S.buyPrice*M > 4.5714e8
+      ? "매수가가 디딤돌 한도 4억 5,714만원을 넘어 초과분은 전액 현금입니다"
+      : "디딤돌 한도 안쪽 구간이라 금리가 낮은 쪽을 그대로 쓸 수 있습니다",
+    [["월 실부담", wonK(best.netMonthly)],
+     ["계약 시 현금", won(best.cashNeed)],
+     ["대출 실행액", best.loan ? won(best.loan) : "—"],
+     ["2년 거주비용", won(best.cost2y)]])}
+  <p class="scroll-hint">표를 옆으로 밀면 나머지 상품이 보입니다</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>항목</th>${cols.map(r => `<th>${r.name}${r===best?'<span class="best">최적</span>':""}</th>`).join("")}</tr></thead>
+    <tbody>
+      ${row("자격", r => badge(r))}
+      ${row("대출 실행액", r => r.loan ? won(r.loan) : "—")}
+      ${row("자기부담 매매대금", r => won(r.own))}
+      ${row("부대비용", r => won(r.closing))}
+      ${row("계약 시 총 현금", r => won(r.cashNeed), "hi")}
+      ${row("양가 지원금 차감 후", r => won(r.cashAfterGift))}
+      ${row("월 상환액", r => r.loan ? wonK(r.monthly) : "—")}
+      ${row("월 관리비", r => wonK(r.mgmt))}
+      ${row("월 장기수선충당금", r => wonK(r.ltm))}
+      ${row("재산세 (월 환산)", r => wonK(r.propTax/12))}
+      ${row("월 소득공제 효과", r => r.taxSave ? "−" + wonK(r.taxSave/12) : "—")}
+      ${row("월 실부담", r => r.loan ? wonK(r.netMonthly) : "—", "hi")}
+      ${row("2년 거주비용", r => r.loan ? won(r.cost2y) : "—")}
+      ${row("심사 비율", r => r.loan ? pct(r.ratio) + " / " + pct(r.dti) : "—")}
+      ${row("30년 총 이자", r => r.loan ? won(r.totalInterest) : "—")}
+    </tbody>
+  </table></div>
+  <details class="notes-box" id="notesBox"><summary>읽는 법</summary><ul class="notes">
+    <li>기준시가 추정 <b>${won(c.gongsi)}</b> — 6억 이하라 장기주택저당차입금 이자상환액 소득공제 ${c.deductible ? "<b>대상</b>입니다" : "<b>대상이 아닙니다</b>"}. 30년 고정·비거치라 정책대출은 연 2,000만원 한도를 받습니다</li>
+    <li>디딤돌 상품한도는 매수가 <b>4억 5,714만원</b>을 넘는 순간 LTV보다 먼저 걸립니다. 그 위로 오르는 금액은 전액 현금입니다</li>
+    <li>계약금 10%(<b>${won(c.price*0.1)}</b>)는 토지거래허가가 나기 전에 나갑니다. 대출과 무관하게 미리 있어야 하는 현금입니다</li>
+    <li>마이너스통장은 한도 전액이 DSR에 잡힙니다. 은행 주담대를 쓸 계획이면 잔금 3개월 전까지 해지하세요</li>
+    <li>재산세 연 <b>${won(c.propTax)}</b> — 공시가격 ${won(c.gongsi)} × 공정시장가액비율 ${P("fairRatio")}%에 누진세율을 매기고 도시지역분·지방교육세를 더한 값입니다. 공시 9억 이하 1세대 1주택 특례세율 기준. 6월 1일 소유자가 냅니다</li>
+    <li>장기수선충당금은 <b>소유자 부담</b>입니다. 관리비 고지서에 이미 포함돼 나오는 단지가 많으니, 그런 경우 여기를 0으로 두고 관리비에만 넣으세요</li>
+    <li><b>2년 거주비용</b>은 2년 동안 회수하지 못하는 돈입니다. 이자 + 부대비용 + 관리비 + 장기수선충당금 + 재산세에서 절세분을 뺐고, 원금 상환분은 자산으로 남으므로 넣지 않았습니다</li>
+  </ul></details>`;
+}
+
+function renderJeonse(){
+  const c = calcJeonse(), best = c.best;
+  // 최적으로 뽑힌 상품을 맨 왼쪽에 세운다
+  const cols = [best].concat(c.rows.filter(r => r !== best));
+  const row = (label, fn, cls) => `<tr class="${cls||""}">
+    <th scope="row">${label}</th>${cols.map(r => `<td class="v">${fn(r)}</td>`).join("")}</tr>`;
+  return `
+  <div class="grid2">
+    ${amountBlock("jeonseDep","전세보증금",S.jeonseDep,500)}
+    ${amountBlock("jeonseFee","월 관리비",S.jeonseFee,1)}
+  </div>
+  ${pickCard(best.name,
+    "이 보증금에서 자격이 되는 상품 중 월 실부담이 가장 낮습니다",
+    [["월 실부담", wonK(best.netMonthly)],
+     ["계약 시 현금", won(best.cashNeed)],
+     ["대출 실행액", best.loan ? won(best.loan) : "—"],
+     ["2년 거주비용", won(best.cost2y)]])}
+  <p class="scroll-hint">표를 옆으로 밀면 나머지 상품이 보입니다</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>항목</th>${cols.map(r => `<th>${r.name}${r===best?'<span class="best">최적</span>':""}</th>`).join("")}</tr></thead>
+    <tbody>
+      ${row("자격", r => r.blocked ? `<span class="pill off">${r.blocked}</span>` : `<span class="pill ok">가능</span>`)}
+      ${row("대출 실행액", r => r.loan ? won(r.loan) : "—")}
+      ${row("자기부담 보증금", r => won(r.own))}
+      ${row("부대비용", r => won(r.fees))}
+      ${row("계약 시 총 현금", r => won(r.cashNeed), "hi")}
+      ${row("양가 지원금 차감 후", r => won(r.cashAfterGift))}
+      ${row("월 이자", r => r.loan ? wonK(r.monthly) : "—")}
+      ${row("월 관리비", r => wonK(r.mgmt))}
+      ${row("월 소득공제 효과", r => r.taxSave ? "−" + wonK(r.taxSave/12) : "—")}
+      ${row("월 실부담", r => r.loan ? wonK(r.netMonthly) : "—", "hi")}
+      ${row("2년 거주비용", r => r.loan ? won(r.cost2y) : "—")}
+    </tbody>
+  </table></div>
+  <details class="notes-box" id="notesBox"><summary>읽는 법</summary><ul class="notes">
+    <li>전세대출은 <b>원금을 갚지 않습니다</b> 위 이자는 전액 소멸 비용이고, 매매의 월 상환액에는 원금이 섞여 있습니다. 같은 숫자로 비교하면 안 됩니다</li>
+    <li>청년 버팀목 한도는 2025.06.27 계약분부터 2억에서 <b>1.5억</b>으로 줄었습니다. 보증금 3억이면 80%인 2.4억이 아니라 1.5억까지만 나옵니다</li>
+    <li>신혼 버팀목은 <b>한 명이 5,000만원 이하</b>면 열립니다. 현행 부부합산 7,500만원 기준에서는 막히던 구간이고, 디딤돌·버팀목 시행일은 아직 고시되지 않았습니다</li>
+    <li>전세가율(보증금 ÷ 같은 면적 매매 실거래)이 <b>80%</b>를 넘으면 재고하세요. 계약 전 등기부 을구의 채권최고액을 반드시 확인합니다</li>
+    <li><b>2년 거주비용</b>은 2년 동안 회수하지 못하는 돈입니다. 이자 + 중개보수·반환보증료 + 관리비에서 절세분을 뺐고, 보증금은 돌려받으므로 넣지 않았습니다</li>
+    <li>세입자는 재산세를 내지 않고, 관리비에 섞여 나간 장기수선충당금은 <b>퇴거할 때 집주인에게 돌려받습니다</b> 이사 전에 관리사무소에서 납부확인서를 떼세요</li>
+  </ul></details>`;
+}
+
+function renderWolse(){
+  const c = calcWolse(), best = c.best;
+  // 최적으로 뽑힌 상품을 맨 왼쪽에 세운다
+  const cols = [best].concat(c.rows.filter(r => r !== best));
+  const row = (label, fn, cls) => `<tr class="${cls||""}">
+    <th scope="row">${label}</th>${cols.map(r => `<td class="v">${fn(r)}</td>`).join("")}</tr>`;
+  const equiv = c.dep + c.rent * (12 / (P("convRate")/100));
+  return `
+  <div class="grid2">
+    ${amountBlock("wolseDep","보증금",S.wolseDep,100)}
+    ${amountBlock("wolseRent","월 임대료",S.wolseRent,5)}
+  </div>
+  ${amountBlock("wolseFee","월 관리비",S.wolseFee,1)}
+  ${pickCard(best.name,
+    `전월세전환율 ${P("convRate")}% 기준으로 환산하면 전세 ${won(equiv)}짜리 집입니다`,
+    [["월 실부담", wonK(best.netMonthly)],
+     ["계약 시 현금", won(best.cashNeed)],
+     ["보증금 대출", best.depLoan ? won(best.depLoan) : "—"],
+     ["2년 거주비용", won(best.cost2y)]])}
+  <p class="scroll-hint">표를 옆으로 밀면 나머지 상품이 보입니다</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>항목</th>${cols.map(r => `<th>${r.name}${r===best?'<span class="best">최적</span>':""}</th>`).join("")}</tr></thead>
+    <tbody>
+      ${row("자격", r => r.blocked ? `<span class="pill off">${r.blocked}</span>` : `<span class="pill ok">가능</span>`)}
+      ${row("보증금 대출", r => r.depLoan ? won(r.depLoan) : "—")}
+      ${row("월세 대출", r => r.rentLoan ? won(r.rentLoan) + "/월" : "—")}
+      ${row("계약 시 총 현금", r => won(r.cashNeed), "hi")}
+      ${row("양가 지원금 차감 후", r => won(r.cashAfterGift))}
+      ${row("보증금 대출이자", r => r.depInt ? wonK(r.depInt) : "—")}
+      ${row("월세 대출이자", r => r.rentInt ? wonK(r.rentInt) : "—")}
+      ${row("자기부담 월세", r => wonK(r.ownRent))}
+      ${row("관리비", r => wonK(r.mgmt))}
+      ${row("월 현금 지출", r => wonK(r.monthly))}
+      ${row("월 세액공제 효과", r => "−" + wonK(c.taxCredit/12))}
+      ${row("월 실부담", r => wonK(r.netMonthly), "hi")}
+      ${row("2년 거주비용", r => won(r.cost2y))}
+      ${row("2년 뒤 갚을 월세대출", r => r.principal2y ? won(r.principal2y) : "—")}
+    </tbody>
+  </table></div>
+  <details class="notes-box" id="notesBox"><summary>읽는 법</summary><ul class="notes">
+    <li>월세 세액공제율 <b>${(c.taxRate*100).toFixed(0)}%</b> · 연 ${won(c.taxCredit)}. 총급여 5,500만원 이하 17%, 8,000만원 이하 15%, 초과하면 없습니다. 관리비는 대상이 아닙니다</li>
+    <li>월세 대출은 매달 빌려 잔액이 늘어납니다. 위 이자는 <b>평균 잔액</b> 기준이고, 2년 뒤 원금은 한꺼번에 갚아야 합니다</li>
+    <li><b>월 실부담</b>은 통장에서 실제로 나가는 돈이라 빌린 월세가 빠져 있습니다 <b>2년 거주비용</b>에는 그 월세도 넣었습니다 — 빌렸든 아니든 집주인에게 이미 나간 돈이기 때문입니다</li>
+    <li>중개보수는 환산보증금(보증금 + 월세×100 = <b>${won(c.dep + c.rent*100)}</b>) 기준으로 매깁니다</li>
+    <li>2026 세제개편안의 한도 1,200만원·청년 17% 일괄은 <b>아직 국회를 통과하지 않았습니다</b> 위 계산은 현행 기준입니다</li>
+  </ul></details>`;
+}
+
+
+/* ============ 매물 ============ */
+/* ○ = 좋음으로 읽히도록 항목 이름의 방향을 통일했다 */
+const CHECK_GROUPS = [
+  { key:"area", title:"임장 전 · 입지",
+    items:["직장 통근 60분 이내","지하철역 도보 10분","서울행 광역버스","버스정류장 도보 5분",
+           "간선도로 진입 편함","초등학교 도보 10분","중학교 배정 확인","어린이집·유치원",
+           "학원가 접근","대형마트·슈퍼","편의점 도보 3분","병원·약국","공원·산책로",
+           "소음원 없음","유해시설 없음","경사 완만","개발 호재 확인"] },
+  { key:"complex", title:"임장 전 · 단지와 시세",
+    items:["최근 3개월 실거래 확인","호가와 실거래 차이","월 거래량 확인","세대수 500 이상",
+           "준공 25년 이내","세대당 주차 1대 이상","관리비 수준","전세가율 80% 이하",
+           "정비사업 없음","등기부 근저당 확인"] },
+  { key:"unit", title:"임장 중 · 물건",
+    items:["즉시입주","로열동·로열층","향과 일조","누수·결로 흔적 없음","곰팡이·환기",
+           "수압","배관 교체","창호 교체","벽지·바닥 상태","층간소음 확인",
+           "지하주차 연결","동간 거리 여유","엘리베이터 상태","단지 관리 상태"] }
+];
+const TYPES = { buy:"매매", jeonse:"전세", wolse:"월세" };
+const MAX_SHOTS = 6;
+const AREAS = {
+  "서울": ["강남구","강동구","강북구","강서구","관악구","광진구","구로구","금천구","노원구","도봉구",
+           "동대문구","동작구","마포구","서대문구","서초구","성동구","성북구","송파구","양천구","영등포구",
+           "용산구","은평구","종로구","중구","중랑구"],
+  "경기": ["수원 장안구","수원 권선구","수원 팔달구","수원 영통구","성남 수정구","성남 중원구","성남 분당구",
+           "용인 처인구","용인 기흥구","용인 수지구","고양 덕양구","고양 일산동구","고양 일산서구",
+           "안양 만안구","안양 동안구","안산 상록구","안산 단원구","부천","화성","평택","시흥","김포",
+           "광명","광주","군포","의왕","오산","이천","하남","남양주","의정부","파주","구리","안성","양주","포천","여주"],
+  "인천": ["중구","동구","미추홀구","연수구","남동구","부평구","계양구","서구"]
+};
+let props = [], propsReady = false, pending = {}, justAdded = {}, openProps = {};
+
+const chipMark = v => v === "y" ? " ○" : v === "m" ? " △" : v === "n" ? " ✕" : "";
+const MARKED = v => v === "y" || v === "m" || v === "n";
+function tally(p, items){
+  const c = p.checks || {};
+  return {
+    total: items.length,
+    done: items.filter(i => MARKED(c[i])).length,
+    mid:  items.filter(i => c[i] === "m").length,
+    bad:  items.filter(i => c[i] === "n").length
+  };
+}
+function checkCount(p, g){
+  const t = tally(p, g.items);
+  return t.done + "/" + t.total + " 확인"
+       + (t.mid ? " · △ " + t.mid : "") + (t.bad ? " · ✕ " + t.bad : "");
+}
+function tallyAll(p){
+  const items = CHECK_GROUPS.reduce((a, g) => a.concat(g.items), []);
+  return tally(p, items);
+}
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ponytail: 계산 함수가 전역 S를 읽으므로 잠깐 값을 바꿔치기했다가 되돌린다
+   매물이 수백 개로 늘면 calc*(입력) 형태로 인자를 받게 바꿀 것. */
+function quote(p){
+  const keep = { buyPrice:S.buyPrice, buyFee:S.buyFee, jeonseDep:S.jeonseDep,
+                 jeonseFee:S.jeonseFee, wolseDep:S.wolseDep, wolseRent:S.wolseRent,
+                 wolseFee:S.wolseFee };
+  let best;
+  try {
+    if (p.type === "jeonse"){
+      S.jeonseDep = p.price || 0; S.jeonseFee = p.fee || 0;
+      best = calcJeonse().best;
+    } else if (p.type === "wolse"){
+      S.wolseDep = p.price || 0; S.wolseRent = p.rent || 0; S.wolseFee = p.fee || 0;
+      best = calcWolse().best;
+    } else {
+      S.buyPrice = p.price || 0; S.buyFee = p.fee || 0;
+      best = calcBuy().best;
+    }
+  } finally { Object.assign(S, keep); }
+  return best;
+}
+
+/* 41개 항목의 기본 무게. 매일 겪는 것과 돈이 크게 드는 것에 무게를 준다. */
+const WEIGHT = {
+  // 입지 — 통근은 매일, 되돌릴 수 없다
+  "직장 통근 60분 이내":3, "지하철역 도보 10분":2.2, "서울행 광역버스":1.6,
+  "버스정류장 도보 5분":1.0, "간선도로 진입 편함":1.2,
+  "초등학교 도보 10분":2.0, "중학교 배정 확인":1.5, "어린이집·유치원":1.0, "학원가 접근":1.2,
+  "대형마트·슈퍼":1.2, "편의점 도보 3분":0.7, "병원·약국":1.2, "공원·산책로":1.0,
+  "소음원 없음":2.0, "유해시설 없음":2.0, "경사 완만":1.2, "개발 호재 확인":1.2,
+  // 단지·시세 — 돈이 걸린 확인
+  "최근 3개월 실거래 확인":2.2, "호가와 실거래 차이":2.0, "월 거래량 확인":1.5,
+  "세대수 500 이상":1.3, "준공 25년 이내":1.2, "세대당 주차 1대 이상":1.5,
+  "관리비 수준":1.2, "전세가율 80% 이하":2.5, "정비사업 없음":1.8, "등기부 근저당 확인":3,
+  // 물건 — 수리비와 실거주 만족도
+  "즉시입주":2.0, "로열동·로열층":1.5, "향과 일조":1.8, "누수·결로 흔적 없음":3,
+  "곰팡이·환기":2.0, "수압":1.5, "배관 교체":2.0, "창호 교체":1.5,
+  "벽지·바닥 상태":0.9, "층간소음 확인":1.8, "지하주차 연결":1.3,
+  "동간 거리 여유":1.2, "엘리베이터 상태":1.0, "단지 관리 상태":1.2
+};
+
+/* 자녀가 있으면 교육·보육이 무거워지고, 없으면 가벼워진다 */
+const KID_WEIGHT = {
+  "초등학교 도보 10분":1.35, "중학교 배정 확인":1.3, "어린이집·유치원":2.0,
+  "학원가 접근":1.5, "공원·산책로":1.3, "경사 완만":1.3
+};
+/* 같은 항목도 유형에 따라 무게가 다르다
+   전세는 보증금을 떼일 위험이, 매매는 오래 사는 조건이 더 중요하다. */
+const TYPE_WEIGHT = {
+  // 매매는 오래 산다 — 학군·재건축·환금성이 자산가치로 돌아온다
+  buy:    { "정비사업 없음":1.5, "준공 25년 이내":1.6, "월 거래량 확인":1.6, "세대수 500 이상":1.4,
+            "중학교 배정 확인":1.3, "개발 호재 확인":1.5, "호가와 실거래 차이":1.3,
+            "배관 교체":1.3, "창호 교체":1.3 },
+  // 전세는 2년 뒤 보증금을 온전히 돌려받는 게 전부다
+  jeonse: { "전세가율 80% 이하":2.0, "등기부 근저당 확인":2.0, "정비사업 없음":1.6,
+            "개발 호재 확인":0.6, "준공 25년 이내":0.7, "월 거래량 확인":0.7 },
+  // 월세는 짧게 살고 나간다 — 사는 동안의 상태와 고정비가 중요
+  wolse:  { "등기부 근저당 확인":1.5, "관리비 수준":1.8, "층간소음 확인":1.3, "수압":1.3,
+            "개발 호재 확인":0.4, "준공 25년 이내":0.6, "월 거래량 확인":0.5,
+            "정비사업 없음":0.8, "세대수 500 이상":0.7 }
+};
+const wOf = (k, type) =>
+  (WEIGHT[k] || 1)
+  * ((TYPE_WEIGHT[type] || {})[k] || 1)
+  * (S.baby === "y" ? (KID_WEIGHT[k] || 1) : 1);
+
+/* ✕ 하나로 계약을 접어야 하는 항목 — 평균에 묻히면 안 된다 */
+const DEALBREAKERS = ["등기부 근저당 확인", "누수·결로 흔적 없음", "즉시입주",
+                      "정비사업 없음", "유해시설 없음"];
+
+function areaScore(p, group){
+  const c = p.checks || {};
+  let got = 0, marked = 0, all = 0;
+  group.items.forEach(i => {
+    const w = wOf(i, p.type); all += w;
+    const v = c[i];
+    if (v === "y") { got += w; marked += w; }
+    else if (v === "m") { got += w * 0.5; marked += w; }
+    else if (v === "n") { marked += w; }
+  });
+  return {
+    pct: marked ? got / marked : null,
+    confidence: all ? marked / all : 0,
+    weak: group.items.filter(i => c[i] === "n").sort((a, b) => wOf(b, p.type) - wOf(a, p.type)),
+    unknown: group.items.filter(i => !MARKED(c[i])).sort((a, b) => wOf(b, p.type) - wOf(a, p.type))
+  };
+}
+
+/* 자금은 계산 결과로 직접 판정한다
+   - 부담률은 세전이 아니라 세후 추정 소득으로 잰다. 세전으로 재면 실제보다 관대해진다
+   - 매매의 월 상환액에는 원금이 섞여 있다. 원금은 자산이 되므로 주거비에서 뺀다
+   - 소득이 없으면 판정하지 않는다(0점이 아니라 미확인). */
+const NET_RATIO = 0.82;   // 4대보험·소득세 차감 후 추정
+
+function moneyScore(p, q){
+  const inc = incomes();
+  if (!inc.dtiBase) return { pct: null, confidence: 0, burden: null, short: q.cashAfterGift,
+                             blocked: false, housing: q.netMonthly, principal: 0 };
+  const net = inc.dtiBase * NET_RATIO;
+  // 매매: 2년 평균 원금 상환분을 주거비에서 제외
+  const principal = (p.type === "buy" && q.interest2y != null && q.monthly)
+    ? Math.max(0, q.monthly - q.interest2y / 24) : 0;
+  const housing = Math.max(0, q.netMonthly - principal);
+  const burden = housing * 12 / net;
+  const short = q.cashAfterGift;
+  const bs = burden <= 0.25 ? 1 : burden <= 0.30 ? 0.8 : burden <= 0.35 ? 0.55
+           : burden <= 0.45 ? 0.3 : 0.1;
+  const cs = short <= 0 ? 1 : short <= net * 0.5 ? 0.7 : short <= net ? 0.45 : 0.2;
+  const blocked = !!q.blocked || q.pass === false;
+  return { pct: Math.min(blocked ? 0.35 : 1, bs * 0.5 + cs * 0.5),
+           burden, short, blocked, housing, principal, confidence: 1 };
+}
+
+const GRADES = [
+  { min:0.85, label:"좋음",  tone:"ok"   },
+  { min:0.70, label:"양호",  tone:"ok"   },
+  { min:0.55, label:"보통",  tone:"warn" },
+  { min:0.40, label:"주의",  tone:"warn" },
+  { min:0,    label:"재고",  tone:"off"  }
+];
+
+function verdict(p){
+  const q = quote(p);
+  const money = moneyScore(p, q);
+  /* 매매는 오래 사니 입지·단지가 무겁고, 전세는 보증금 안전(단지·등기)이,
+     월세는 짧게 사니 자금과 물건 상태가 무겁다. */
+  const MIX = {
+    buy:    { money:0.35, area:0.30, complex:0.20, unit:0.15 },
+    jeonse: { money:0.30, area:0.25, complex:0.30, unit:0.15 },
+    wolse:  { money:0.40, area:0.25, complex:0.15, unit:0.20 }
+  }[p.type] || { money:0.40, area:0.30, complex:0.15, unit:0.15 };
+
+  const parts = [
+    { key:"money",   name:"자금",   weight:MIX.money,   r:money },
+    { key:"area",    name:"입지",   weight:MIX.area,    r:areaScore(p, CHECK_GROUPS[0]) },
+    { key:"complex", name:"단지",   weight:MIX.complex, r:areaScore(p, CHECK_GROUPS[1]) },
+    { key:"unit",    name:"물건",   weight:MIX.unit,    r:areaScore(p, CHECK_GROUPS[2]) }
+  ];
+  const scored = parts.filter(x => x.r.pct !== null);
+  const wsum = scored.reduce((a, x) => a + x.weight, 0);
+  const total = wsum ? scored.reduce((a, x) => a + x.weight * x.r.pct, 0) / wsum : null;
+  const confidence = parts.reduce((a, x) => a + x.weight * x.r.confidence, 0);
+  // 자금만 채워도 등급이 나오면 안 된다. 입지가 절반은 채워져야 한다
+  const areaConf = parts.find(x => x.key === "area").r.confidence;
+  const reliable = confidence >= 0.6 && areaConf >= 0.5;
+
+  // ✕ 하나로 계약을 접어야 하는 항목이 있으면 등급 상한을 건다
+  const c = p.checks || {};
+  const killers = DEALBREAKERS.filter(k => c[k] === "n");
+  const mr = marketRead(p);
+  if (mr && mr.ratio && mr.ratio > 0.8) killers.push("전세가율 " + mr.text);
+  const capped = killers.length && total !== null ? Math.min(total, 0.45) : total;
+
+  const grade = capped === null ? null
+              : reliable ? GRADES.find(g => capped >= g.min)
+              : { label:"보류", tone:"off" };
+
+  // 가장 약한 영역으로 한 줄 판정을 만든다
+  const worst = scored.length ? scored.slice().sort((a, b) => a.r.pct - b.r.pct)[0] : null;
+  const bestPart = scored.length ? scored.slice().sort((a, b) => b.r.pct - a.r.pct)[0] : null;
+  let line;
+  if (total === null) line = "아직 아무것도 확인하지 않았습니다";
+  else if (!reliable) line = "확인한 항목이 적어 아직 판정할 수 없습니다";
+  else if (killers.length) line = killers[0] + " — 이것부터 해결해야 합니다";
+  else if (money.blocked) line = "지금 조건으로는 대출 자격이나 심사에서 걸립니다";
+  else if (scored.length === parts.length && worst.r.pct >= 0.75) line = "네 영역 모두 무난합니다";
+  else if (worst.key === "money") line = "다른 건 괜찮은데 자금이 빠듯합니다";
+  else line = bestPart.r.pct >= 0.7
+      ? bestPart.name + "는 괜찮은데 " + worst.name + "에서 걸리는 게 있습니다"
+      : worst.name + "가 가장 약합니다";
+
+  const weak = parts.filter(x => x.r.weak).reduce((a, x) => a.concat(x.r.weak), [])
+                    .filter(k => killers.indexOf(k) < 0)
+                    .sort((a, b) => wOf(b, p.type) - wOf(a, p.type)).slice(0, 3);
+  const next = parts.filter(x => x.r.unknown).reduce((a, x) => a.concat(x.r.unknown), [])
+                    .sort((a, b) => wOf(b, p.type) - wOf(a, p.type)).slice(0, 3);
+  return { q, total: capped, grade, line, parts, confidence, reliable, weak, next, money, killers };
+}
+
+function renderVerdict(p){
+  const v = verdict(p);
+  const pctText = r => r.pct === null ? "미확인" : Math.round(r.pct * 100) + "%";
+  const money = v.money;
+  const moneyLine = money.short > 0
+    ? "양가 지원금을 넣고도 <b>" + won(money.short) + "</b>이 더 필요합니다"
+    : "양가 지원금으로 계약금과 부대비용까지 덮습니다";
+  const burdenLine = money.burden === null
+    ? "소득을 넣으면 부담률을 계산합니다"
+    : "세후 소득 대비 주거비 <b>" + (money.burden * 100).toFixed(0) + "%</b>"
+      + (money.principal ? " (월 상환액 중 원금 " + wonK(money.principal) + "은 자산이라 제외)" : "")
+      + ". " + moneyLine;
+  return `
+  <div class="vd">
+    <div class="vd-top">
+      ${v.grade ? `<span class="pill ${v.grade.tone}">${v.grade.label}</span>` : ""}
+      <span class="vd-line">${v.line}</span>
+      ${v.total !== null && v.reliable ? `<span class="vd-num">${Math.round(v.total * 100)}</span>` : ""}
+    </div>
+    <div class="vd-bars">
+      ${v.parts.map(x => `
+        <div class="vd-row">
+          <span class="vd-k">${x.name}</span>
+          <span class="vd-bar"><i style="width:${x.r.pct === null ? 0 : Math.round(x.r.pct * 100)}%"></i></span>
+          <span class="vd-p">${pctText(x.r)}</span>
+        </div>`).join("")}
+    </div>
+    <ul class="vd-notes">
+      <li>${burdenLine}</li>
+      ${v.killers.length ? `<li class="vd-kill">계약을 미뤄야 하는 항목 — <b>${v.killers.join(" · ")}</b></li>` : ""}
+      ${(() => { const m = marketRead(p);
+         if (!m) return `<li>${p.type === "buy" ? "같은 평형 실거래" : "참고 매매시세"}를 넣으면 ${p.type === "buy" ? "호가가 얼마나 붙었는지" : "전세가율"}를 계산합니다</li>`;
+         if (m.ratio) return `<li>전세가율 <b>${m.text}</b>. ${m.bad ? "80%를 넘어 집값이 조금만 내려도 보증금이 위태롭습니다"
+           : m.warn ? "75%를 넘었습니다. 반환보증 가입은 필수입니다" : "안전한 구간입니다"}</li>`;
+         return `<li>같은 평형 실거래보다 <b>${m.text}</b>. ${m.bad ? "호가가 많이 붙었습니다. 협상 여지를 보세요" : "무리한 호가는 아닙니다"}</li>`; })()}
+      ${v.weak.length ? `<li>걸리는 점 — <b>${v.weak.join(" · ")}</b></li>` : ""}
+      ${v.next.length ? `<li>다음에 확인할 것 — ${v.next.join(" · ")}</li>` : ""}
+      ${!v.reliable ? `<li class="vd-warn">확인한 항목이 적어 등급을 매기지 않았습니다. 입지 17개를 절반 이상 채우면 판정이 나옵니다</li>` : ""}
+      <li class="vd-warn">시세가 적정한지는 판단하지 않습니다. 실거래가는 국토부에서 직접 확인하세요</li>
+    </ul>
+  </div>`;
+}
+
+/* 비교에 올리려면 이름과 금액이 있어야 한다. 월세는 월세액까지. */
+function comparable(p){
+  if (!p.price) return false;
+  if (!(p.name || "").trim()) return false;
+  if (p.type === "wolse" && !p.rent) return false;
+  return true;
+}
+
+function renderCompare(){
+  const ready = props.filter(comparable);
+  const pending = props.length - ready.length;
+  const groups = Object.keys(TYPES)
+    .map(t => ({ t, name: TYPES[t], rows: ready.filter(p => p.type === t) }))
+    .filter(g => g.rows.length);
+  if (!groups.length) {
+    return props.length ? `<div class="cmp"><p class="cmp-empty">단지명과 금액을 넣으면 여기에서 비교됩니다
+      ${pending ? "아직 " + pending + "건이 비어 있습니다" : ""}</p></div>` : "";
+  }
+
+  const amount = p => p.type === "wolse"
+    ? won(p.price * M) + " / " + won((p.rent || 0) * M)
+    : won(p.price * M);
+
+  return `<div class="cmp">${groups.map(g => {
+    const quoted = g.rows.map(p => ({ p, q: quote(p) }));
+    const best = quoted.slice().sort((a, b) => a.q.netMonthly - b.q.netMonthly)[0];
+    return `
+    <div class="cmp-group">
+      <div class="cmp-head">
+        <span class="cmp-title">${g.name}</span>
+        <span class="cmp-n">${g.rows.length}건</span>
+      </div>
+      <div class="tablewrap"><table class="cmp-table">
+        <thead><tr>
+          <th>단지</th><th>판정</th><th>점수</th><th>${g.t === "buy" ? "호가" : g.t === "wolse" ? "보증금 / 월세" : "보증금"}</th>
+          <th>월 실부담</th><th>계약 시 현금</th><th>2년 거주비용</th><th>확인</th>
+        </tr></thead>
+        <tbody>
+          ${quoted.map(({ p, q }) => {
+            const t = tallyAll(p);
+            return `<tr data-jump="${p.id}">
+              <th scope="row">${esc(p.name || "이름 없음")}${p.unit ? " " + esc(p.unit) : ""}${quoted.length > 1 && p === best.p ? '<span class="best">최저</span>' : ""}${p.area ? `<span class="cmp-area">${esc(p.area)}</span>` : ""}</th>
+              <td class="v">${(() => { const v = verdict(p);
+                return v.grade ? `<span class="pill ${v.grade.tone}">${v.grade.label}</span>` : "—"; })()}</td>
+              <td class="v cmp-score">${p.score == null ? "—" : p.score + "<span class=\"cmp-of\">/10</span>"}</td>
+              <td class="v">${amount(p)}${(() => { const m = marketRead(p); return m
+                ? `<span class="cmp-sub${m.bad ? " cmp-bad" : ""}">${m.key} ${m.text}</span>` : ""; })()}</td>
+              <td class="v">${wonK(q.netMonthly)}</td>
+              <td class="v">${won(q.cashNeed)}</td>
+              <td class="v">${won(q.cost2y)}</td>
+              <td class="v">${t.done}/${t.total}${t.bad ? ' <span class="cmp-bad">✕' + t.bad + "</span>" : ""}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table></div>
+    </div>`;
+  }).join("")}${pending ? `<p class="cmp-empty">${pending}건은 단지명이나 금액이 비어 있어 제외했습니다</p>` : ""}</div>`;
+}
+
+/* 전세가율 = 보증금 ÷ 같은 면적 매매시세. 80%를 넘으면 보증금이 위태롭다
+   매매는 실거래 대비 호가가 얼마나 붙었는지를 본다. */
+function marketRead(p){
+  if (!p.market || !p.price) return null;
+  if (p.type === "buy") {
+    const gap = (p.price - p.market) / p.market;
+    return { key:"실거래 대비", text:(gap >= 0 ? "+" : "") + (gap * 100).toFixed(1) + "%",
+             bad: gap > 0.05, ratio: null };
+  }
+  const ratio = p.price / p.market;
+  return { key:"전세가율", text:(ratio * 100).toFixed(0) + "%",
+           bad: ratio > 0.8, warn: ratio > 0.75, ratio };
+}
+
+function renderProps(){
+  if (!db) return `
+    <div class="prop-empty">
+      <p><b>${fbConfig() ? "저장소에 연결하지 못했습니다" : "매물 관리에는 공유 저장소가 필요합니다"}</b><br>
+      ${fbConfig()
+        ? "상단 안내 문구를 확인해 주세요. Firestore 규칙을 아직 게시하지 않은 경우가 대부분입니다"
+        : "사진과 임장 기록을 담을 저장소가 이 주소에는 없습니다. README의 Firebase 설정을 마치면 열립니다"}</p>
+    </div>`;
+  if (!propsReady) return `<p class="prop-note">매물을 불러오는 중입니다</p>`;
+
+  const list = props.map(p => {
+    const q = quote(p);
+    const isWolse = p.type === "wolse";
+    const priceLabel = p.type === "buy" ? "호가" : "보증금";
+    const shots = (p.thumbs || []).map((t, i) =>
+      `<button class="shot" type="button" data-open="${p.id}" data-i="${i}">
+         <img src="${t}" alt="${i+1}번째 사진"></button>`).join("");
+    const addShot = (p.thumbs || []).length < MAX_SHOTS
+      ? `<label class="shot-add"><span>+</span>사진 추가
+           <input type="file" accept="image/*" multiple hidden data-shot="${p.id}"></label>` : "";
+    if (!openProps[p.id]) {
+      const v = p.price ? verdict(p) : null;
+      const t = tallyAll(p);
+      return `
+      <button class="prop-brief${justAdded[p.id] ? " is-new" : ""}" type="button"
+              id="prop_${p.id}" data-open="${p.id}">
+        <span class="pr-main">
+          <span class="pr-name">${esc(p.name || "이름 없음")}${p.unit ? " " + esc(p.unit) : ""}</span>
+          <span class="pr-meta">${TYPES[p.type]}${p.area ? " · " + esc(p.area) : ""}${
+            p.price ? " · " + won(p.price * M) : ""}</span>
+        </span>
+        <span class="pr-side">
+          ${v && v.grade ? `<span class="pill ${v.grade.tone}">${v.grade.label}</span>` : ""}
+          <span class="pr-chk">${t.done}/${t.total}</span>
+        </span>
+      </button>`;
+    }
+    return `
+    <div class="prop${justAdded[p.id] ? " is-new" : ""}" id="prop_${p.id}">
+      <div class="prop-head">
+        <div class="prop-names">
+          <input class="prop-name" data-f="name" data-id="${p.id}" value="${esc(p.name || "")}"
+                 placeholder="단지명" aria-label="단지명">
+          <input class="prop-unit" data-f="unit" data-id="${p.id}" value="${esc(p.unit || "")}"
+                 placeholder="동 · 호수" aria-label="동호수">
+        </div>
+        <select class="prop-area" data-f="area" data-id="${p.id}" aria-label="지역">
+          <option value="">지역 선택</option>
+          ${Object.keys(AREAS).map(sido => `<optgroup label="${sido}">
+            ${AREAS[sido].map(gu => {
+              const v = sido + " " + gu;
+              return `<option value="${v}"${p.area === v ? " selected" : ""}>${v}</option>`;
+            }).join("")}
+          </optgroup>`).join("")}
+          ${p.area && !Object.keys(AREAS).some(k => AREAS[k].some(g => k + " " + g === p.area))
+            ? `<option value="${esc(p.area)}" selected>${esc(p.area)}</option>` : ""}
+        </select>
+        <div class="prop-row">
+          <div class="prop-type" data-id="${p.id}">
+            ${Object.keys(TYPES).map(t =>
+              `<button type="button" data-t="${t}" aria-pressed="${p.type === t}">${TYPES[t]}</button>`).join("")}
+          </div>
+        </div>
+      </div>
+      <div class="prop-nums">
+        <div class="field"><label>${priceLabel}</label>
+          <div class="inputline"><input type="number" inputmode="numeric" step="100"
+            data-f="price" data-id="${p.id}" value="${p.price == null ? "" : p.price}"><span class="unit">만원</span></div>
+        </div>
+        ${isWolse ? `<div class="field"><label>월세</label>
+          <div class="inputline"><input type="number" inputmode="numeric" step="5"
+            data-f="rent" data-id="${p.id}" value="${p.rent == null ? "" : p.rent}"><span class="unit">만원</span></div>
+        </div>` : ""}
+        <div class="field"><label>월 관리비</label>
+          <div class="inputline"><input type="number" inputmode="numeric" step="1"
+            data-f="fee" data-id="${p.id}" value="${p.fee == null ? "" : p.fee}"><span class="unit">만원</span></div>
+        </div>
+        <div class="field"><label>${p.type === "buy" ? "같은 평형 실거래" : "참고 매매시세"}</label>
+          <div class="inputline"><input type="number" inputmode="numeric" step="100"
+            data-f="market" data-id="${p.id}" value="${p.market == null ? "" : p.market}"><span class="unit">만원</span></div>
+        </div>
+      </div>
+      <div class="prop-quote">
+        <div><span class="k">월 실부담</span><span class="v">${p.price ? wonK(q.netMonthly) : "—"}</span></div>
+        <div><span class="k">계약 시 현금</span><span class="v">${p.price ? won(q.cashNeed) : "—"}</span></div>
+        <div><span class="k">2년 거주비용</span><span class="v">${p.price ? won(q.cost2y) : "—"}</span></div>
+        <div><span class="k">적용 상품</span><span class="v" style="font-size:var(--t3)">${p.price ? q.name : "—"}</span></div>
+        ${(() => { const m = marketRead(p); return m
+          ? `<div><span class="k">${m.key}</span><span class="v${m.bad ? " cmp-bad" : ""}">${m.text}</span></div>` : ""; })()}
+      </div>
+      <div class="prop-body">
+        ${p.price ? renderVerdict(p) : ""}
+        <div class="field score">
+          <label for="sc_${p.id}">종합 점수</label>
+          <div class="inputline">
+            <input id="sc_${p.id}" type="number" inputmode="numeric" min="0" max="10" step="1"
+                   data-score="${p.id}" value="${p.score == null ? "" : p.score}"
+                   placeholder="0 – 10">
+            <span class="unit">/ 10</span>
+          </div>
+        </div>
+        ${CHECK_GROUPS.map(g => `
+        <details class="chk-group" id="chk_${p.id}_${g.key}">
+          <summary>
+            <span class="chk-title">${g.title}</span>
+            <span class="chk-count" id="cnt_${p.id}_${g.key}">${checkCount(p, g)}</span>
+          </summary>
+          <div class="chips" data-id="${p.id}" data-g="${g.key}">
+            ${g.items.map(c => `<button class="chip" type="button" data-c="${c}"
+               data-s="${(p.checks || {})[c] || ""}">${c}${chipMark((p.checks||{})[c])}</button>`).join("")}
+            <button class="chip chip-reset" type="button"
+                    data-reset="${p.id}" data-rg="${g.key}">초기화</button>
+          </div>
+        </details>`).join("")}
+        <div class="shots">${shots}${addShot}</div>
+        <textarea class="prop-memo" data-f="memo" data-id="${p.id}"
+          placeholder="메모 — 체크로 안 남는 것들. 중개사 이름과 연락처, 집주인 사정, 협상 여지">${esc(p.memo || "")}</textarea>
+        <button class="btn-utility" type="button" data-fill="${p.id}">이 금액으로 계산기 채우기</button>
+        <div class="prop-actions">
+          <button class="prop-fold" type="button" data-fold="${p.id}">접기</button>
+          <button class="prop-del" type="button" data-del="${p.id}">삭제</button>
+          <button class="prop-save" type="button" data-save="${p.id}"
+                  ${pending[p.id] ? "" : "disabled"}>${pending[p.id] ? "저장" : "저장됨"}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const compare = renderCompare();
+  const readyCount = props.filter(comparable).length;
+  return `
+    <div class="prop-bar">
+      <span class="prop-count">${props.length ? props.length + "개 기록 중" : "아직 없습니다"}</span>
+      <button class="btn-primary" type="button" id="addProp">매물 추가</button>
+    </div>
+    ${compare ? `<details class="cmp-box" id="cmpBox" ${readyCount ? "open" : ""}><summary>매물 비교</summary>${compare}</details>` : ""}
+    ${props.length ? list : `<div class="prop-empty">
+      <p><b>임장 가기 전에 먼저 만드세요</b><br>
+      입지 ${CHECK_GROUPS[0].items.length}개를 지도앱으로 먼저 확인하면, 가볼 집과 안 가도 될 집이 갈립니다<br>
+      호가만 넣으면 필요한 현금과 월 실부담도 바로 계산됩니다</p>
+    </div>`}
+    <p class="prop-note">고친 내용은 <b>저장</b>을 눌러야 상대방 화면에 반영됩니다. 체크는 눌러서 <b>○ 좋음 → △ 보통 → ✕ 아쉬움 → 빈칸</b>으로 바뀝니다<br>
+      사진은 올릴 때 자동으로 압축됩니다(긴 변 1400px). 매물당 ${MAX_SHOTS}장까지. 기록은 두 사람이 같이 보고 같이 고칩니다</p>`;
+}
+
+function bindProps(){
+  const body = document.getElementById("calcBody");
+  const add = document.getElementById("addProp");
+  if (add) add.addEventListener("click", async () => {
+    add.disabled = true;
+    add.innerHTML = '<span class="spin"></span>추가하는 중';
+    try {
+      const ref = db.collection(at("props")).doc();   // id를 먼저 받는다
+      justAdded[ref.id] = true;
+      openProps[ref.id] = true;
+      await ref.set({
+        name:"", unit:"", area:"", type:"buy", price:null, rent:null, fee:15, market:null, score:null,
+        checks:{}, memo:"", photos:[], thumbs:[], createdAt: Date.now()
+      });
+      setSync(true, "매물을 추가했습니다");
+    } catch (e) {
+      setSync(false, "매물을 추가하지 못했습니다");
+      add.disabled = false;
+      add.textContent = "매물 추가";
+    }
+  });
+
+  body.querySelectorAll("[data-f]").forEach(el => {
+    const onEdit = () => {
+      const id = el.dataset.id, f = el.dataset.f;
+      const TEXT_FIELDS = ["name", "unit", "memo", "area", "type"];
+      const v = TEXT_FIELDS.indexOf(f) >= 0 ? el.value
+              : (el.value === "" ? null : Number(el.value));
+      const p = props.find(x => x.id === id); if (p) p[f] = v;
+      queueProp(id, { [f]: v });
+    };
+    el.addEventListener("input", onEdit);
+    if (el.tagName === "SELECT") el.addEventListener("change", onEdit);
+  });
+
+  body.querySelectorAll(".prop-type").forEach(g => {
+    g.addEventListener("click", e => {
+      const b = e.target.closest("button"); if (!b) return;
+      const p = props.find(x => x.id === g.dataset.id); if (p) p.type = b.dataset.t;
+      queueProp(g.dataset.id, { type: b.dataset.t });
+      renderTab();
+    });
+  });
+
+  body.querySelectorAll(".chips").forEach(g => {
+    g.addEventListener("click", e => {
+      const b = e.target.closest(".chip"); if (!b) return;
+      const id = g.dataset.id, key = b.dataset.c;
+      const p = props.find(x => x.id === id); if (!p) return;
+      const next = { "": "y", y: "m", m: "n", n: "" }[b.dataset.s || ""];
+      p.checks = Object.assign({}, p.checks, { [key]: next });
+      b.dataset.s = next;
+      b.textContent = key + chipMark(next);
+      b.classList.remove("pop");
+      void b.offsetWidth;                       // 연속으로 눌러도 다시 재생되게
+      b.classList.add("pop");
+      const group = CHECK_GROUPS.find(x => x.key === g.dataset.g);
+      const counter = document.getElementById("cnt_" + id + "_" + g.dataset.g);
+      if (group && counter) counter.textContent = checkCount(p, group);
+      queueProp(id, { checks: p.checks });
+    });
+  });
+
+  Object.keys(justAdded).forEach(id => {
+    delete justAdded[id];
+    const card = document.getElementById("prop_" + id);
+    if (card) requestAnimationFrame(() =>
+      card.scrollIntoView({ behavior: "smooth", block: "center" }));
+  });
+  body.querySelectorAll("[data-open]").forEach(b => {
+    b.addEventListener("click", () => {
+      openProps[b.dataset.open] = true;
+      renderTab();
+    });
+  });
+  body.querySelectorAll("[data-fold]").forEach(b => {
+    b.addEventListener("click", () => {
+      delete openProps[b.dataset.fold];
+      renderTab();
+    });
+  });
+  body.querySelectorAll("[data-save]").forEach(b => {
+    b.addEventListener("click", () => saveProp(b.dataset.save));
+    if (pending[b.dataset.save]) b.classList.add("is-dirty");
+  });
+  body.querySelectorAll("[data-reset]").forEach(b => {
+    b.addEventListener("click", () => {
+      const p = props.find(x => x.id === b.dataset.reset); if (!p) return;
+      const g = CHECK_GROUPS.find(x => x.key === b.dataset.rg); if (!g) return;
+      const next = Object.assign({}, p.checks);
+      g.items.forEach(i => { delete next[i]; });
+      p.checks = next;
+      queueProp(p.id, { checks: next });
+      renderTab();
+    });
+  });
+  body.querySelectorAll("[data-del]").forEach(b => {
+    b.addEventListener("click", () => {
+      if (b.dataset.armed === "1") {
+        delete openProps[b.dataset.del];
+        const card = document.getElementById("prop_" + b.dataset.del);
+        if (card) card.classList.add("is-leaving");
+        removeProp(b.dataset.del);
+        return;
+      }
+      b.dataset.armed = "1";
+      b.textContent = "한 번 더";
+      clearTimeout(b.resetTimer);
+      b.resetTimer = setTimeout(() => {
+        b.dataset.armed = ""; b.textContent = "삭제";
+      }, 4000);
+    });
+  });
+  body.querySelectorAll("[data-fill]").forEach(b => {
+    b.addEventListener("click", () => fillFromProp(b.dataset.fill));
+  });
+  body.querySelectorAll("[data-shot]").forEach(inp => {
+    inp.addEventListener("change", async () => {
+      const tile = inp.closest(".shot-add");
+      if (tile) tile.classList.add("busy");
+      await addShots(inp.dataset.shot, inp.files);
+      if (tile) tile.classList.remove("busy");
+    });
+  });
+  body.querySelectorAll("[data-open]").forEach(b => {
+    b.addEventListener("click", () => openShot(b.dataset.open, Number(b.dataset.i)));
+  });
+  body.querySelectorAll("[data-score]").forEach(el => {
+    el.addEventListener("input", () => {
+      const id = el.dataset.score;
+      const v = el.value === "" ? null : Math.max(0, Math.min(10, Number(el.value)));
+      const p = props.find(x => x.id === id); if (p) p.score = v;
+      queueProp(id, { score: v });
+    });
+  });
+  body.querySelectorAll("[data-jump]").forEach(tr => {
+    tr.addEventListener("click", () => {
+      const card = document.getElementById("prop_" + tr.dataset.jump);
+      if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+/* 편집은 pending에 모아 두고 저장 버튼을 눌러야 서버에 올린다
+   두 사람이 같이 쓰므로, 저장하지 않은 값은 상대 화면에 반영되지 않는다. */
+function queueProp(id, patch){
+  pending[id] = Object.assign({}, pending[id], patch);
+  markDirty(id);
+}
+
+function markDirty(id){
+  const btn = document.querySelector('[data-save="' + id + '"]');
+  if (!btn) return;
+  const on = !!pending[id];
+  btn.disabled = !on;
+  btn.textContent = on ? "저장" : "저장됨";
+  btn.classList.toggle("is-dirty", on);
+}
+
+async function saveProp(id){
+  const patch = pending[id];
+  if (!patch) return;
+  const btn = document.querySelector('[data-save="' + id + '"]');
+  if (btn) { btn.disabled = true; btn.textContent = "저장 중"; }
+  try {
+    await db.doc(at("props/" + id)).update(patch);
+    delete pending[id];
+    setSync(true, "저장했습니다 · 상대방 화면에도 반영");
+    const done = document.querySelector('[data-save="' + id + '"]');
+    if (done) {
+      done.classList.remove("is-dirty");
+      done.classList.add("saved");
+      done.textContent = "저장됨 ✓";
+      setTimeout(() => {
+        delete openProps[id];
+        renderTab();
+      }, 900);
+      return;
+    }
+  } catch (e) {
+    setSync(false, "저장하지 못했습니다");
+  }
+  markDirty(id);
+}
+
+async function removeProp(id){
+  const p = props.find(x => x.id === id);
+  delete pending[id];
+  setSync(true, "삭제하는 중입니다");
+  for (const pid of (p && p.photos) || []) {
+    try { await db.doc(at("photos/" + pid)).delete(); } catch (e) {}
+  }
+  try {
+    await db.doc(at("props/" + id)).delete();
+    setSync(true, "매물을 삭제했습니다");
+  } catch (e) { setSync(false, "삭제하지 못했습니다"); }
+}
+
+function fillFromProp(id){
+  const p = props.find(x => x.id === id); if (!p || !p.price) return;
+  if (p.type === "jeonse"){ S.jeonseDep = p.price; S.jeonseFee = p.fee || 0; S.tab = "jeonse"; }
+  else if (p.type === "wolse"){ S.wolseDep = p.price; S.wolseRent = p.rent || 0;
+    S.wolseFee = p.fee || 0; S.tab = "wolse"; }
+  else { S.buyPrice = p.price; S.buyFee = p.fee || 0; S.tab = "buy"; }
+  render(); save();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* 사진 — 캔버스로 줄이고 JPEG로 다시 뽑아 문서 한도(256KB) 안에 들어오게 한다 */
+function shrink(file, maxPx, quality, maxLen){
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      let q = quality, out = c.toDataURL("image/jpeg", q);
+      while (out.length > maxLen && q > 0.25) { q -= 0.1; out = c.toDataURL("image/jpeg", q); }
+      if (out.length > maxLen) reject(new Error("too-big")); else resolve(out);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode")); };
+    img.src = url;
+  });
+}
+
+async function addShots(id, files){
+  const p = props.find(x => x.id === id); if (!p || !files.length) return;
+  const photos = (p.photos || []).slice(), thumbs = (p.thumbs || []).slice();
+  let skipped = 0;
+  setSync(true, "사진을 올리는 중입니다");
+  for (const f of files){
+    if (thumbs.length >= MAX_SHOTS) { skipped++; continue; }
+    try {
+      const cap = (typeof firebase !== "undefined" && fbConfig()) ? 700000 : 190000;
+      const full = await shrink(f, cap > 300000 ? 1800 : 1400, 0.78, cap);
+      const thumb = await shrink(f, 240, 0.6, 24000);
+      const ref = await db.collection(at("photos")).add({ propId: id, data: full, createdAt: Date.now() });
+      photos.push(ref.id); thumbs.push(thumb);
+    } catch (e) { skipped++; }
+  }
+  try {
+    await db.doc(at("props/" + id)).update({ photos, thumbs });
+    setSync(true, skipped ? skipped + "장은 올리지 못했습니다" : "사진을 올렸습니다");
+  } catch (e) { setSync(false, "사진 정보를 저장하지 못했습니다"); }
+}
+
+async function openShot(id, index){
+  const p = props.find(x => x.id === id); if (!p) return;
+  const pid = (p.photos || [])[index]; if (!pid) return;
+  const box = document.createElement("div");
+  box.className = "lightbox";
+  box.innerHTML = `<div class="lightbox-bar">
+      <button type="button" data-x="del">이 사진 삭제</button>
+      <button type="button" data-x="close">닫기</button>
+    </div><img alt="임장 사진" src="${p.thumbs[index]}">`;
+  document.body.appendChild(box);
+  const close = () => box.remove();
+  box.addEventListener("click", async e => {
+    const act = e.target.dataset ? e.target.dataset.x : null;
+    if (act === "close" || e.target === box) { close(); return; }
+    if (act === "del"){
+      close();
+      const photos = p.photos.slice(), thumbs = p.thumbs.slice();
+      photos.splice(index, 1); thumbs.splice(index, 1);
+      try { await db.doc(at("photos/" + pid)).delete(); } catch (e2) {}
+      db.doc(at("props/" + id)).update({ photos, thumbs })
+        .catch(() => setSync(false, "사진을 지우지 못했습니다"));
+    }
+  });
+  try {
+    const snap = await db.doc(at("photos/" + pid)).get();
+    if (snap.exists) box.querySelector("img").src = snap.data().data;
+  } catch (e) {}
+}
+
+function watchProps(){
+  db.collection(at("props")).orderBy("createdAt", "desc").onSnapshot(snap => {
+    props = snap.docs.map(d => {
+      const base = Object.assign({ id: d.id }, d.data());
+      return pending[d.id] ? Object.assign(base, pending[d.id]) : base;
+    });
+    propsReady = true;
+    if (S.tab === "prop") renderTab();
+  }, e => {
+    propsReady = true;
+    setSync(false, storeError(e, "매물"));
+    if (S.tab === "prop") renderTab();
+  });
+}
+
+/* ============ 렌더 ============ */
+function render(){
+  const act = document.activeElement;
+  const keep = act && act.id ? { id: act.id, pos: act.selectionStart } : null;
+
+  const b = calcBuy(), j = calcJeonse(), w = calcWolse();
+  renderSummary(b, j, w);
+
+  [["incA",S.incA],["incB",S.incB],["gift",S.gift]].forEach(([id,v]) => {
+    const el = document.getElementById(id);
+    if (document.activeElement !== el) el.value = v;
+  });
+  setSeg("segName", S.nameMode); setSeg("segWho", S.who); setSeg("segBaby", S.baby);
+  document.getElementById("soloPick").hidden = S.nameMode !== "solo";
+
+  const inc = incomes();
+  document.getElementById("nameHint").innerHTML = inc.solo
+    ? `${WHO(S.who)} 소득 <b>${won(inc.self)}</b>만 잡힙니다. 디딤돌 주택가격 5억, 생애최초 한도 2.4억`
+    : `낮은 쪽 <b>${won(inc.low)}</b>으로 심사합니다. 합산은 보지 않습니다`;
+  document.getElementById("babyHint").innerHTML = S.baby === "y"
+    ? `신생아 특례가 열립니다 <b>2년 이내 출생</b> 기준이고 임신 중이면 확인서로 됩니다`
+    : `신생아 특례는 <b>2년 이내 출생</b> 자녀가 있어야 해서 전세 표에서 뺐습니다`;
+
+  document.querySelectorAll("#tabs button").forEach(el =>
+    el.setAttribute("aria-selected", el.dataset.t === S.tab));
+  renderTab();
+
+  if (keep) {
+    const el = document.getElementById(keep.id);
+    if (el && el !== document.activeElement) {
+      el.focus({ preventScroll: true });
+      if (keep.pos != null && el.type !== "range") {
+        try { el.setSelectionRange(keep.pos, keep.pos); } catch (e) {}
+      }
+    }
+  }
+}
+
+function renderTab(){
+  const body = document.getElementById("calcBody");
+  const act = document.activeElement;
+  const keep = act && act.dataset && act.dataset.id
+    ? { id: act.dataset.id, f: act.dataset.f, pos: act.selectionStart } : null;
+  const openState = {};
+  body.querySelectorAll("details[id]").forEach(d => { openState[d.id] = d.open; });
+
+  body.innerHTML =
+    S.tab === "buy" ? renderBuy() :
+    S.tab === "jeonse" ? renderJeonse() :
+    S.tab === "wolse" ? renderWolse() : renderProps();
+
+  body.querySelectorAll("details[id]").forEach(d => {
+    if (openState[d.id] !== undefined) d.open = openState[d.id];
+  });
+
+  if (S.tab === "prop") bindProps(); else bindAmounts();
+
+  if (keep && keep.f){
+    const el = body.querySelector('[data-id="' + keep.id + '"][data-f="' + keep.f + '"]');
+    if (el){
+      el.focus({ preventScroll: true });
+      try { el.setSelectionRange(keep.pos, keep.pos); } catch (e) {}
+    }
+  }
+}
+
+function setSeg(id, v){
+  document.querySelectorAll("#" + id + " button").forEach(el =>
+    el.setAttribute("aria-pressed", el.dataset.v === v));
+}
+
+/* ============ 입력 바인딩 ============ */
+function bindAmounts(){
+  ["buyPrice","buyFee","buyLtm","jeonseDep","jeonseFee","wolseDep","wolseRent","wolseFee"].forEach(key => {
+    const num = document.getElementById(key + "_n");
+    if (!num) return;
+    num.addEventListener("input", () => {
+      S[key] = Math.max(0, Number(num.value) || 0);    // 만원 단위, 소수 허용(장기수선충당금)
+      scheduleRerender(500);
+    });
+  });
+}
+
+let rerenderTimer = null;
+function scheduleRerender(ms){
+  clearTimeout(rerenderTimer);
+  rerenderTimer = setTimeout(() => { render(); save(); }, ms || 250);
+}
+
+function bindOnce(){
+  ["incA","incB","gift"].forEach(id => {
+    document.getElementById(id).addEventListener("input", e => {
+      S[id] = Number(e.target.value) || 0;
+      scheduleRerender(400);
+    });
+  });
+  const seg = (id, key) => document.getElementById(id).addEventListener("click", e => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    S[key] = btn.dataset.v; render(); save();
+  });
+  seg("segName","nameMode"); seg("segWho","who"); seg("segBaby","baby");
+  document.getElementById("tabs").addEventListener("click", e => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    S.tab = btn.dataset.t; render(); save();
+  });
+  document.getElementById("resetParams").addEventListener("click", () => {
+    S.params = {}; renderParams(); render(); save();
+  });
+  document.getElementById("shareBtn").addEventListener("click", share);
+  document.getElementById("summary").addEventListener("click", e => {
+    const btn = e.target.closest("[data-go]"); if (!btn) return;
+    S.tab = btn.dataset.go; render(); save();
+    document.getElementById("tabs").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function renderParams(){
+  const grid = document.getElementById("paramGrid");
+  grid.innerHTML = PARAM_META.map(([k, label, unit]) => `
+    <div class="field">
+      <label for="p_${k}">${label}</label>
+      <div class="inputline">
+        <input id="p_${k}" data-p="${k}" type="number" inputmode="decimal" step="any" value="${P(k)}">
+        <span class="unit">${unit}</span>
+      </div>
+    </div>`).join("");
+  grid.querySelectorAll("input").forEach(el => {
+    el.addEventListener("input", () => {
+      S.params[el.dataset.p] = el.value === "" ? null : Number(el.value);
+      scheduleRerender(400);
+    });
+  });
+}
+
+/* ============ 링크로 상태 주고받기 ============ */
+function encodeState(){
+  return btoa(unescape(encodeURIComponent(JSON.stringify(S)))).replace(/=+$/, "");
+}
+function decodeState(b64){
+  try { return JSON.parse(decodeURIComponent(escape(atob(b64)))); } catch (e) { return null; }
+}
+function syncHash(){
+  const h = hashParams();
+  // 서버에 저장하는 중이면 상태를 주소에 실을 필요가 없다
+  writeHash(db ? { room: h.room } : Object.assign({}, h, { s: encodeState() }));
+}
+function share(){
+  syncHash();
+  const btn = document.getElementById("shareBtn");
+  const done = ok => {
+    btn.textContent = ok ? "복사했습니다" : "주소창을 복사하세요";
+    setTimeout(() => { btn.textContent = "링크 복사"; }, 2200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(location.href).then(() => done(true), () => done(false));
+  } else done(false);
+}
+
+/* ============ Firebase (GitHub Pages용 공유 저장소) ============
+   Firebase 콘솔의 "웹 앱에 Firebase 추가"에서 나오는 코드를 아래에 그대로 붙여넣으면 된다
+   const firebaseConfig = { ... } 형태로 붙여도 인식한다
+   이 값들은 비밀이 아니다. 접근 제어는 Firestore 규칙이 한다. */
+var FIREBASE = {
+  apiKey: "AIzaSyBOuKVAosaiUAYVqxJf2kQjpajfvxSGiuo",
+  authDomain: "lattetouille-9c9c2.firebaseapp.com",
+  projectId: "lattetouille-9c9c2",
+  storageBucket: "lattetouille-9c9c2.firebasestorage.app",
+  messagingSenderId: "973275930228",
+  appId: "1:973275930228:web:c071ecad0e1ad92e603b21",
+  measurementId: "G-VF2CLY761K"
+};
+
+/* 데이터는 rooms/<임의의 방 주소> 아래에 둔다
+   방 주소는 링크에만 실려 있어서, 링크를 모르면 경로를 찾을 수 없다
+   아티팩트에서는 이미 아티팩트별로 격리되므로 접두어를 붙이지 않는다. */
+let roomPrefix = "";
+const at = path => roomPrefix + path;
+
+function newRoomId(){
+  const a = new Uint8Array(12);
+  (self.crypto || self.msCrypto).getRandomValues(a);
+  return Array.from(a, b => b.toString(36).padStart(2, "0")).join("");
+}
+
+function hashParams(){
+  const o = {};
+  location.hash.replace(/^#/, "").split("&").forEach(kv => {
+    const i = kv.indexOf("=");
+    if (i > 0) o[kv.slice(0, i)] = kv.slice(i + 1);
+  });
+  return o;
+}
+function writeHash(o){
+  const q = Object.keys(o).filter(k => o[k]).map(k => k + "=" + o[k]).join("&");
+  try { history.replaceState(null, "", q ? "#" + q : location.pathname); } catch (e) {}
+}
+
+/* 어느 이름으로 붙여넣었든 찾아낸다. 없으면 null. */
+function fbConfig(){
+  var c = null;
+  try { if (typeof firebaseConfig !== "undefined" && firebaseConfig && firebaseConfig.apiKey) c = firebaseConfig; } catch (e) {}
+  if (!c) { try { if (typeof FIREBASE !== "undefined" && FIREBASE && FIREBASE.apiKey) c = FIREBASE; } catch (e) {} }
+  return c;
+}
+
+async function connectFirebase(){
+  const cfg = fbConfig();
+  if (!cfg || typeof firebase === "undefined") return false;
+  try { firebase.initializeApp(cfg); } catch (e) {}
+  const store = firebase.firestore();
+
+  // 링크에 방 주소가 없으면 새로 만들고 주소창에 남긴다
+  const h = hashParams();
+  const room = h.room || newRoomId();
+  roomPrefix = "rooms/" + room + "/";
+  writeHash(Object.assign({}, h, { room }));
+
+  db = store;
+  docRef = db.doc(at("plan/current"));
+  setSync(true, h.room ? "둘이 함께 보는 중" : "새 방을 만들었습니다 · 링크를 복사해 공유하세요");
+  watchPlan();
+  watchProps();
+  return true;
+}
+
+/* ============ 저장 ============ */
+function localSave(){ try { localStorage.setItem("firsthome", JSON.stringify(S)); } catch (e) {} }
+function localLoad(){
+  const fromHash = hashParams().s ? decodeState(hashParams().s) : null;
+  if (fromHash) { S = Object.assign({}, DEFAULT_STATE, fromHash); }
+  else {
+    try {
+      const raw = localStorage.getItem("firsthome");
+      if (raw) S = Object.assign({}, DEFAULT_STATE, JSON.parse(raw));
+    } catch (e) {}
+  }
+  if (!S.params) S.params = {};
+}
+function save(){
+  localSave();
+  syncHash();
+  if (!docRef) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    docRef.set(Object.assign({}, S, { updatedAt: Date.now() }))
+      .then(() => setSync(true, "저장됨 · 상대방 화면에도 반영"))
+      .catch(() => setSync(false, "저장 실패 — 이 기기에만 남았습니다"));
+  }, 500);
+}
+function setSync(live, text){
+  document.getElementById("syncDot").className = "dot" + (live ? " live" : "");
+  document.getElementById("syncText").textContent = text;
+}
+
+function watchPlan(){
+  docRef.onSnapshot(snap => {
+    if (snap.metadata.hasPendingWrites) return;
+    if (!snap.exists) { save(); return; }
+    S = Object.assign({}, DEFAULT_STATE, snap.data());
+    if (!S.params) S.params = {};
+    const open = document.getElementById("paramsBox").open;
+    renderParams(); render();
+    document.getElementById("paramsBox").open = open;
+    localSave();
+  }, e => setSync(false, storeError(e, "설정")));
+}
+
+/* Firestore 규칙에 막히면 원인을 정확히 알려 준다 */
+function storeError(e, what){
+  const code = (e && (e.code || e.message) || "").toString();
+  if (/permission|denied/i.test(code))
+    return what + " 접근이 거부되었습니다 — Firestore 규칙을 게시했는지 확인하세요";
+  return what + " 동기화가 끊겼습니다 — 이 기기에만 저장됩니다";
+}
+
+async function connect(){
+  if (await connectFirebase()) return;
+  if (typeof claude === "undefined" || !claude.use) return;
+  const store = await claude.use("db");
+  if (!store) return;
+  db = store;
+  docRef = db.doc("plan/current");
+  setSync(true, "둘이 함께 보는 중");
+  watchPlan();
+  watchProps();
+}
+
+/* 다른 방 링크를 열린 페이지에 붙여넣으면 해시만 바뀌고 재접속이 안 된다 */
+addEventListener("hashchange", () => {
+  const r = hashParams().room;
+  if (roomPrefix && r && roomPrefix !== "rooms/" + r + "/") location.reload();
+});
+
+/* ============ 시작 ============ */
+localLoad();
+renderParams();
+render();
+bindOnce();
+setSync(false, "이 기기에 저장됨 · 링크로 공유");
+connect();
+</script>
+</body>
+</html>
